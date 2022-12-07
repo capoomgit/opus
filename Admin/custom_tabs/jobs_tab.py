@@ -172,6 +172,8 @@ class JobView(QVBoxLayout):
                 display_color = QColor(255, 190, 118)
             elif job_status == JobStatus.FAILED.value:
                 display_color = QColor(235, 77, 75)
+            elif job_status == JobStatus.NOTSTARTED.value:
+                display_color = QColor(0, 102, 102)
 
             # Make colors darker
             if display_color is not None:

@@ -14,9 +14,13 @@ class CapoomCommand:
         self.data = data
         self.type = type
         self.count = count
-        self.remaining = [x for x in range(count)]
+        self.remaining = []
         self.version = version
         self.status = status
         self.assigner = assigner
         self.uuid = uuid4()
         self.priority = priority
+
+    def init_remaining(self):
+        """Initializes the remaining list with the count of the command"""
+        self.remaining = [x for x in range(self.count)]

@@ -1129,7 +1129,7 @@ class Ui_MainWindow(object):
                 all_data.update(render_data)
                 all_data.update(cache_data)
                 starting_state = None
-                if self.checkbox_startingstatus_render.isChecked():
+                if self.checkbox_startingstatus_cache.isChecked():
                     starting_state = JobStatus.INPROGRESS.value
                 else:
                     starting_state = JobStatus.NOTSTARTED.value
