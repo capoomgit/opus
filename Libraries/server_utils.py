@@ -21,6 +21,11 @@ class CapoomCommand:
         self.uuid = uuid4()
         self.priority = priority
 
+        # Sanity check
+        self.initalized_remaining = False
+
     def init_remaining(self):
         """Initializes the remaining list with the count of the command"""
-        self.remaining = [x for x in range(self.count)]
+        if not self.initalized_remaining:
+            self.remaining = [x for x in range(self.count)]
+            self.initalized_remaining = True

@@ -41,8 +41,16 @@ class TreeView(QTreeView):
 
 # Wrapper class for QStandardItem
 class StandardItem(QStandardItem):
-    def __init__(self, txt='',font_size=12, set_bold=False, set_color=QColor(255, 255, 255), set_background_color=QColor(255,255,255)):
+    def __init__(self, txt='',font_size=12, set_bold=False, set_color=None, set_background_color=None):
         super().__init__()
+
+        if set_background_color is None:
+            set_background_color = QColor(255,255,255)
+
+        if set_color is None:
+            set_color = QColor(255, 255, 255)
+
+
         font = QFont()
         font.setPointSize(font_size)
         font.setBold(set_bold)
@@ -174,6 +182,8 @@ class JobView(QVBoxLayout):
                 display_color = QColor(235, 77, 75)
             elif job_status == JobStatus.NOTSTARTED.value:
                 display_color = QColor(0, 102, 102)
+            else:
+                display_color = QColor(0, 0, 0)
 
             # Make colors darker
             if display_color is not None:

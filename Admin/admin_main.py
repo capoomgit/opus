@@ -1139,7 +1139,7 @@ class Ui_MainWindow(object):
                                         self.input_version.text(),
                                         starting_state,
                                         self.socket_name,
-                                        self.slider_priority.value()) # TODO actually get the status that you want to initialize
+                                        self.slider_priority.value())
     def render(self):
 
         all_data = {}
