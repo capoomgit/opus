@@ -345,11 +345,13 @@ class CapoomServer():
 
     def read_cmds(self, unpickled):
 
+        unpickled.init_remaining()
 
         skip = unpickled.data["skip"]
         structure = unpickled.data["structure"]
         projectid = unpickled.data["projectid"]
         version = str(unpickled.version).zfill(4)
+        
        
 
         # Skip exists
