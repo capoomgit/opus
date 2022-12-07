@@ -1,0 +1,6 @@
+{
+    "addr":"192.168.168.130",
+    "port":18812,
+    "libspath": "P:/pipeline/standalone_dev/libs",
+    "savepath": "P:/pipeline/standalone_dev/saved"
+}

@@ -1,0 +1,5 @@
+__pycache__/
+version.txt
+credentials.json
+
+Tests/sqlJobGetter.py
