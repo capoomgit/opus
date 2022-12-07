@@ -14,6 +14,3 @@
 - ### Async or multithreaded socket handling
 - ### Parameter tab for determining which parameters AI needs (needs good UI/UX)
 - ### Detail attribute tab for the same purpose as parameter tab
-
-## Questions to Haluk
-- ### Ask if creating thread for every client is okay.
