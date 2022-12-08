@@ -65,9 +65,6 @@ class CapoomSlave(threading.Thread):
     def communicate_with_server(self):
         while self.running:
             time.sleep(1)
-            print("Checking responses")
-            print("Response length is", len(self.responses_to_send))
-
             # Send responses
             if len(self.responses_to_send) > 0:
                 for response in self.responses_to_send:
@@ -96,6 +93,10 @@ class CapoomSlave(threading.Thread):
                             job_uuid = actual_data.data["uuid"]
                             do_stage = actual_data.data["stage"]
                             do_render = actual_data.data["render"]
+                            project_id = actual_data.data["projectid"]
+                            work_id = actual_data.data["workid"]
+                            structure = actual_data.data["structure"]
+                            version = actual_data.data["version"]
 
 
                             cache_result, stage_result, render_result = None, None, None
@@ -117,20 +118,26 @@ class CapoomSlave(threading.Thread):
                                 render_result = True
 
                             if any([cache_result, stage_result, render_result]):
-                                result = CapoomResponse("create_structure",
-                                                        {"result":True},
+                                result = CapoomResponse("donework",
+                                                        {"result":True, "workid":work_id, "uuid":job_uuid},
                                                         f"Created structure {socket.gethostname()} with Job UUID {job_uuid}", logginglvl=logging.INFO)
+                                # TODO make this stage, render, cache specific
+                                # Save the workid to finished.txt
+                                with open(SAVE_PATH.format(structure=structure, project_id=project_id, version=str(version).zfill(4)) + "finished.txt", "a") as f:
+                                    print()
+                                    f.write(f"{work_id}\n")
+
                             elif not cache_result:
-                                result = CapoomResponse("create_structure",
-                                                        {"result":False},
+                                result = CapoomResponse("donework",
+                                                        {"result":False, "workid":work_id, "uuid":job_uuid},
                                                         f"Error while creating structure {socket.gethostname()} with Job UUID {job_uuid}", logginglvl=logging.ERROR)
                             elif not stage_result:
-                                result = CapoomResponse("create_structure",
-                                                        {"result":False},
+                                result = CapoomResponse("donework",
+                                                        {"result":False, "workid":work_id, "uuid":job_uuid},
                                                         f"Error while staging structure {socket.gethostname()} with Job UUID {job_uuid}", logginglvl=logging.ERROR)
                             elif not render_result:
-                                result = CapoomResponse("create_structure",
-                                                        {"result":False},
+                                result = CapoomResponse("donework",
+                                                        {"result":False, "workid":work_id, "uuid":job_uuid},
                                                         f"Error while rendering structure {socket.gethostname()} with Job UUID {job_uuid}", logginglvl=logging.ERROR)
 
 
@@ -144,16 +151,16 @@ class CapoomSlave(threading.Thread):
                             render_result = self.render(actual_data)
 
                             if any([stage_result, render_result]):
-                                result = CapoomResponse("render",
-                                                        {"result":True},
+                                result = CapoomResponse("donework",
+                                                        {"result":True, "workid":work_id, "uuid":job_uuid},
                                                         f"Rendered structure {socket.gethostname()} with Job UUID {job_uuid}", logginglvl=logging.INFO)
                             elif not stage_result:
-                                result = CapoomResponse("render",
-                                                        {"result":False},
+                                result = CapoomResponse("donework",
+                                                        {"result":False, "workid":work_id, "uuid":job_uuid},
                                                         f"Error while staging structure {socket.gethostname()} with Job UUID {job_uuid}", logginglvl=logging.ERROR)
                             elif not render_result:
-                                result = CapoomResponse("render",
-                                                        {"result":False},
+                                result = CapoomResponse("donework",
+                                                        {"result":False, "workid":work_id, "uuid":job_uuid},
                                                         f"Error while rendering structure {socket.gethostname()} with Job UUID {job_uuid}", logginglvl=logging.ERROR)
 
                     self.responses_to_send.append(result)
@@ -191,10 +198,7 @@ class CapoomSlave(threading.Thread):
         # merge_file = f"P:/pipeline/standalone_dev/saved/{structure}/Project_{project_id}_v{ref_version}/Objects/Merged/Merged_{project_id}_{work_id}_{ref_version}.bgeo.sc"
 
         # if to_send.data["result"]:
-        #     # Save the workid to finished.txt
-        #     with open(SAVE_PATH.format(structure=structure, project_id=project_id, version=str(version).zfill(4)) + "finished.txt", "a") as f:
-        #         print()
-        #         f.write(f"{work_id}\n")
+
 
     def stage(self, actual_data : CapoomResponse) -> bool:
         """ Stages the given cache so we can render using USD pipeline
