@@ -668,12 +668,9 @@ class CapoomServer():
             try:
                 logger.info("Backing up database")
 
-                backup_number = 0
-                for file in os.listdir("P:/pipeline/standalone/db_backup"):
-                    if file.endswith("sql"):
-                        backup_number = int(file.split("_")[1].split(".")[0])
-                backup_number += 1
-                subprocess.Popen(f"pg_dump -U postgres -d opusdb -f P:/pipeline/standalone/db_backup/backup_{backup_number}.sql")
+                backup_date = datetime.datetime.now().strftime("%d-%m-%Y")
+               
+                subprocess.Popen(f"pg_dump -U postgres -d opusdb -f P:/pipeline/standalone/db_backup/backup_{backup_date}.sql")
             except Exception as e:
                 logger.error(f"Error while backing up db: {e}")
 
