@@ -1125,9 +1125,10 @@ class Ui_MainWindow(object):
                 all_data["skip"] = self.input_skipexist_cache.isChecked()
                 all_data["version"] = self.input_version.text()
 
-                # TODO implement this
                 all_data["structure"] = self.input_structure.currentText()
 
+                # TODO implement this
+                all_data["stage"] = True
 
                 all_data.update(render_data)
                 all_data.update(cache_data)

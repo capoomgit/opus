@@ -20,6 +20,7 @@ import hou
 
 
 SAVE_PATH = "P:/pipeline/standalone_dev/saved/{structure}/Project_{project_id}_v{version}/Objects/"
+MERGE_PATH = "P:/pipeline/standalone_dev/saved/{structure}/Project_{project_id}_v{version}/Merged/"
 # SAVE_PATH = "P:/pipeline/standalone_dev/saved/{project_id}/Objects/"
 CACHE_NAME = "{Object}/{Object}_{project_id}_{work_id}_Out_{Out}_ID_{id}"
 
@@ -415,7 +416,7 @@ def merge_objects_of_structure(project_id, work_id, version, parent_structure="S
     mergeout = mergegeo.createNode("filecache")
     mergeout.parm("filemethod").set(1)
     mergeout.parm("trange").set(0)
-    mergeout.parm("file").set(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + f"/Merged/Merged_{project_id}_{work_id}_{version}.bgeo.sc"))
+    mergeout.parm("file").set(str(MERGE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + f"/Merged_{project_id}_{work_id}_{version}.bgeo.sc"))
 
     merge_all = mergegeo.createNode("merge")
     merge_all.setInput(0, mergefc)
@@ -426,7 +427,7 @@ def merge_objects_of_structure(project_id, work_id, version, parent_structure="S
     mergeout.setInput(0, merge_all)
 
     mergeout.parm("execute").pressButton()
-    hou.hipFile.save(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + f"/Merged/Merged_{project_id}_{work_id}_{version}.hiplc"))
+    hou.hipFile.save(str(MERGE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + f"/Merged_{project_id}_{work_id}_{version}.hiplc"))
 
 
 def init_creation():

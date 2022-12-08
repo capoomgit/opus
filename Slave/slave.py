@@ -98,7 +98,8 @@ class CapoomSlave(threading.Thread):
                             do_render = actual_data.data["render"]
 
 
-                            cache_result, stage_result, render_result
+                            cache_result, stage_result, render_result = None, None, None
+
 
                             try:
                                 cache_result = self.create(actual_data)
@@ -207,10 +208,13 @@ class CapoomSlave(threading.Thread):
         job_uuid = actual_data.data["uuid"]
         ref_version = str(version).zfill(4)
 
+        # TODO implement this
+        frame_count = 10
+
         merge_file = f"P:/pipeline/standalone_dev/saved/{structure}/Project_{project_id}_v{ref_version}/Merged/Merged_{project_id}_{work_id}_{ref_version}.bgeo.sc"
         stage_save_path = f"P:/pipeline/standalone_dev/saved/{structure}/Project_{project_id}_v{ref_version}/Staged/"
 
-        stage_result = stage(merge_file, stage_save_path, project_id, work_id, ref_version)
+        stage_result = stage_usd(merge_file, stage_save_path, project_id, work_id, ref_version, frame_count)
 
         if stage_result is True:
             return True
