@@ -12,6 +12,7 @@ from render import render_smth
 from get_credentials import get_credentials
 from consts import ClientRanks, ClientStatus
 import hou
+from stage import stage_usd
 
 import psycopg2
 import psycopg2.extras
@@ -86,32 +87,73 @@ class CapoomSlave(threading.Thread):
                 data = self.server_socket.recv(self.buffsize)
                 # Check if there is any data
                 if data:
-                    print("Received data")
                     actual_data = pickle.loads(data)
                     if isinstance(actual_data, CapoomResponse):
                         
                         self.set_status(ClientStatus.BUSY.value)
                         # Handling commands
-                        result = None
                         if actual_data.type == "create_structure":
                             job_uuid = actual_data.data["uuid"]
+                            do_stage = actual_data.data["stage"]
+                            do_render = actual_data.data["render"]
+
+
+                            cache_result, stage_result, render_result
+
                             try:
-                                result = self.create(actual_data)
+                                cache_result = self.create(actual_data)
                             except Exception as e:
                                 logger.error(f"Error while creating structure: {e}")
+                                cache_result = False
+                            if do_stage:
+                                stage_result = self.stage(actual_data)
+                            else:
+                                stage_result = True
+
+                            if do_render:
+                                render_result = self.render(actual_data)
+                            else:
+                                render_result = True
+
+                            if any([cache_result, stage_result, render_result]):
+                                result = CapoomResponse("create_structure",
+                                                        {"result":True},
+                                                        f"Created structure {socket.gethostname()} with Job UUID {job_uuid}", logginglvl=logging.INFO)
+                            elif not cache_result:
                                 result = CapoomResponse("create_structure",
                                                         {"result":False},
-                                                        f"Error while creating structure, {socket.gethostname()} with Job UUID {job_uuid}", logginglvl=logging.ERROR)
+                                                        f"Error while creating structure {socket.gethostname()} with Job UUID {job_uuid}", logginglvl=logging.ERROR)
+                            elif not stage_result:
+                                result = CapoomResponse("create_structure",
+                                                        {"result":False},
+                                                        f"Error while staging structure {socket.gethostname()} with Job UUID {job_uuid}", logginglvl=logging.ERROR)
+                            elif not render_result:
+                                result = CapoomResponse("create_structure",
+                                                        {"result":False},
+                                                        f"Error while rendering structure {socket.gethostname()} with Job UUID {job_uuid}", logginglvl=logging.ERROR)
+
 
 
                         if actual_data.type == "render":
-                            try:
-                                result = self.render(actual_data)
-                            except Exception as e:
-                                logger.error(f"Failed to render: {e}")
+                            if actual_data.data["do_stage"]:
+                                stage_result = self.stage(actual_data)
+                            else:
+                                stage_result = True
+
+                            render_result = self.render(actual_data)
+
+                            if any([stage_result, render_result]):
+                                result = CapoomResponse("render",
+                                                        {"result":True},
+                                                        f"Rendered structure {socket.gethostname()} with Job UUID {job_uuid}", logginglvl=logging.INFO)
+                            elif not stage_result:
                                 result = CapoomResponse("render",
                                                         {"result":False},
-                                                        f"Error while rendering, {socket.gethostname()} with Job UUID {job_uuid}", logginglvl=logging.ERROR)
+                                                        f"Error while staging structure {socket.gethostname()} with Job UUID {job_uuid}", logginglvl=logging.ERROR)
+                            elif not render_result:
+                                result = CapoomResponse("render",
+                                                        {"result":False},
+                                                        f"Error while rendering structure {socket.gethostname()} with Job UUID {job_uuid}", logginglvl=logging.ERROR)
 
                     self.responses_to_send.append(result)
                     self.set_status(self.desired_status)
@@ -123,7 +165,7 @@ class CapoomSlave(threading.Thread):
                 self.reconnect()
 
     # TODO actually make this work for objects aswell
-    def create(self, actual_data : CapoomResponse) -> CapoomResponse:
+    def create(self, actual_data : CapoomResponse) -> bool:
         """ Creates the structure/object from given data\n
         `actual_data` CapoomResponse object that contains needed information\n
         `return` CapoomResponse object  with result, workid and jobs uuid"""
@@ -131,66 +173,55 @@ class CapoomSlave(threading.Thread):
         project_id = actual_data.data["projectid"]
         work_id = actual_data.data["workid"]
         version = actual_data.data["version"]
-        job_uuid = actual_data.data["uuid"]
+        # job_uuid = actual_data.data["uuid"]
 
         # Render settings
-        do_render = actual_data.data["render"]
-
         logger.info(f"Creating {structure} for project {project_id} and work {work_id} for version {version}")
 
         init_creation()
-        result = create_structure(structure, project_id, work_id, version)
+        try:
+            cache_result = create_structure(structure, project_id, work_id, version)
+        except Exception as e:
+            logger.error(f"Failed to create {structure} for project {project_id} and work {work_id} for version {version}, reason: {e}")
+            cache_result = False
+        return cache_result
+
+        # ref_version = str(version).zfill(4)
+        # merge_file = f"P:/pipeline/standalone_dev/saved/{structure}/Project_{project_id}_v{ref_version}/Objects/Merged/Merged_{project_id}_{work_id}_{ref_version}.bgeo.sc"
+
+        # if to_send.data["result"]:
+        #     # Save the workid to finished.txt
+        #     with open(SAVE_PATH.format(structure=structure, project_id=project_id, version=str(version).zfill(4)) + "finished.txt", "a") as f:
+        #         print()
+        #         f.write(f"{work_id}\n")
+
+    def stage(self, actual_data : CapoomResponse) -> bool:
+        """ Stages the given cache so we can render using USD pipeline
+        `actual_data` CapoomResponse object that contains needed information\n
+        `return` Result of the render"""
+
+        structure = actual_data.data["structure"]
+        project_id = actual_data.data["projectid"]
+        work_id = actual_data.data["workid"]
+        version = actual_data.data["version"]
+        job_uuid = actual_data.data["uuid"]
         ref_version = str(version).zfill(4)
-        merge_file = f"P:/pipeline/standalone_dev/saved/{structure}/Project_{project_id}_v{ref_version}/Objects/Merged/Merged_{project_id}_{work_id}_{ref_version}.bgeo.sc"
-        rsave_path = f"P:/pipeline/standalone_dev/saved/{structure}/Project_{project_id}_v{ref_version}/Render/"
 
-        if do_render:
-            render_engine = actual_data.data["render_engine"]
-            frame_count = actual_data.data["frame_count"]
-            render_result = render_smth(merge_file, rsave_path, project_id, work_id, version, render_engine, frame_count)
+        merge_file = f"P:/pipeline/standalone_dev/saved/{structure}/Project_{project_id}_v{ref_version}/Merged/Merged_{project_id}_{work_id}_{ref_version}.bgeo.sc"
+        stage_save_path = f"P:/pipeline/standalone_dev/saved/{structure}/Project_{project_id}_v{ref_version}/Staged/"
 
-        to_send = None
+        stage_result = stage(merge_file, stage_save_path, project_id, work_id, ref_version)
 
-        # TODO Refactor this
-        if result:
-            # Cache done
-            to_send = CapoomResponse("donework",
-                                    {"result":True, "workid":work_id, "uuid":job_uuid},
-                                    f"Successfully created {structure} for project {project_id} and work {work_id} for version {version}, UUID: {job_uuid}",
-                                    logginglvl=logging.INFO)
-
-            # Cache and render done
-            if do_render and render_result:
-                to_send = CapoomResponse("donework",
-                                        {"result":True, "workid":work_id, "uuid":job_uuid},
-                                        f"Successfully created and rendered {structure} for project {project_id} and work {work_id} for version {version}, UUID: {job_uuid}",
-                                        logginglvl=logging.INFO)
-            # Cache done but render failed
-            elif do_render and not render_result:
-                to_send = CapoomResponse("donework",
-                                        {"result":False, "workid":work_id, "uuid":job_uuid},
-                                        f"Successfully created but failed to render {structure} for project {project_id} and work {work_id} for version {version}, UUID: {job_uuid}",
-                                        logginglvl=logging.ERROR)
+        if stage_result is True:
+            return True
         else:
-            # Nothing done
-            to_send = CapoomResponse("donework",
-                                    {"result":False, "workid":work_id, "uuid":job_uuid},
-                                    f"Failed to create {structure} for project {project_id} and work {work_id} for version {version}, UUID: {job_uuid}",
-                                    logginglvl=logging.ERROR)
+            logger.error(f"Failed to stage {structure} for project {project_id} and work {work_id} for version {version}, UUID: {job_uuid}\nReason: {stage_result}")
+            return False
 
-        if to_send.data["result"]:
-            # Save the workid to finished.txt
-            with open(SAVE_PATH.format(structure=structure, project_id=project_id, version=str(version).zfill(4)) + "finished.txt", "a") as f:
-                print()
-                f.write(f"{work_id}\n")
-
-        return to_send
-
-
-    def render(self, actual_data : CapoomResponse) -> CapoomResponse:
+    def render(self, actual_data : CapoomResponse) -> bool:
         """ Renders the given file\n
         `actual_data` CapoomResponse object that contains needed information\n
-        `return` CapoomResponse object  with result, workid and jobs uuid"""
+        `return` Result of the render"""
 
         structure = actual_data.data["structure"]
         project_id = actual_data.data["projectid"]
@@ -202,24 +233,45 @@ class CapoomSlave(threading.Thread):
         render_engine = actual_data.data["render_engine"]
         frame_count = actual_data.data["frame_count"]
 
-        merge_file = f"P:/pipeline/standalone_dev/saved/{structure}/Project_{project_id}_v{ref_version}/Objects/Merged/Merged_{project_id}_{work_id}_{ref_version}.bgeo.sc"
-        rsave_path = f"P:/pipeline/standalone_dev/saved/{structure}/Project_{project_id}_v{ref_version}/Render/"
-        render_result = render_smth(merge_file, rsave_path, project_id, work_id, version, render_engine, frame_count)
-        to_send = None
 
-        if render_result:
-            to_send = CapoomResponse("donework",
-                                    {"result":True, "workid":work_id, "uuid":job_uuid},
-                                    f"Successfully rendered {structure} for project {project_id} and work {work_id} for version {version}, UUID: {job_uuid}",
-                                    logginglvl=logging.INFO)
+        # TODO implement other engines again
+        if render_engine != "omniverse":
+            return CapoomResponse("donework",
+                                {"result":False, "workid":work_id, "uuid":job_uuid},
+                                f"Engines other than omniverse are not supported",
+                                logginglvl=logging.ERROR)
+
+
+        stage_file = f"P:/pipeline/standalone_dev/saved/{structure}/Project_{project_id}_v{ref_version}/Staged/Staged_{project_id}_{work_id}_{ref_version}.usd"
+        render_save_path = f"P:/pipeline/standalone_dev/saved/{structure}/Project_{project_id}_v{ref_version}/Rendered/Render_{project_id}_v{ref_version}"
+
+
+        render_result = render_smth(stage_file, render_save_path, project_id, work_id, version, frame_count)
+
+        if render_result is True:
+            return True
         else:
-            to_send = CapoomResponse("donework",
-                                    {"result":False, "workid":work_id, "uuid":job_uuid},
-                                    f"Failed to render {structure} for project {project_id} and work {work_id} for version {version}, UUID: {job_uuid}",
-                                    logginglvl=logging.ERROR)
-        return to_send
+            logger.error(f"Failed to render {structure} for project {project_id} and work {work_id} for version {version}, UUID: {job_uuid}\nReason: {render_result}")
+            return False
 
-   
+
+        # to_send = None
+
+        # if render_result:
+        #     to_send = CapoomResponse("donework",
+        #                             {"result":True, "workid":work_id, "uuid":job_uuid},
+        #                             f"Successfully rendered {structure} for project {project_id} and work {work_id} for version {version}, UUID: {job_uuid}",
+        #                             logginglvl=logging.INFO)
+        # else:
+        #     to_send = CapoomResponse("donework",
+        #                             {"result":False, "workid":work_id, "uuid":job_uuid},
+        #                             f"Failed to render {structure} for project {project_id} and work {work_id} for version {version}, UUID: {job_uuid}",
+        #                             logginglvl=logging.ERROR)
+
+
+        return stage_result
+
+
     def check_do_update(self):
         """ Checks if the server should update itself\n
             This is done by checking `version.ini` on the standalone path on capoom_storage"""

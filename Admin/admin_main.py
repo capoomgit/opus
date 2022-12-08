@@ -735,7 +735,7 @@ class Ui_MainWindow(object):
         self.refreshcd = 1000
         self.socket_name = socket.gethostname()
 
-        
+
         self.mainWindow = MainWindow
         # Create the GUI
         self.setupUi(MainWindow)
@@ -746,7 +746,7 @@ class Ui_MainWindow(object):
         self.init_button_actions()
         self.init_client_list_view()
         self.init_structure_list()
-        
+
         # Start the update timer
         self.timer = QTimer(self.mainWindow)
         self.timer.start(self.refreshcd)
@@ -814,6 +814,9 @@ class Ui_MainWindow(object):
 
         self.settingsui=Ui_dialog_settings()
         self.settingsui.setupUi(self.settingswidget)
+        self.settingsui.load_settings()
+        self.settingsui.button_save.clicked.connect(self.settingsui.save_settings)
+        self.settingsui.button_close.clicked.connect(self.settingsui.close)
 
     def init_omni_settings(self):
         self.omnisettingswidget = QDialog()
@@ -1220,7 +1223,7 @@ class Ui_MainWindow(object):
                                             self.socket_name,
                                             self.slider_priority.value())
                     time.sleep(1)
-    
+
     def cancel_job(self):
         if self.admin is not None:
             jobuuids, jobinfos = self.jobsview.get_selected_jobs()
@@ -1236,7 +1239,7 @@ class Ui_MainWindow(object):
 
             if not self.checkbox_autorljobs.isChecked():
                 self.jobsview.refresh()
-    
+
     def resume_job(self):
         if self.admin is not None:
             joblist, jobinfo = self.jobsview.get_selected_jobs()
@@ -1257,7 +1260,7 @@ class Ui_MainWindow(object):
                 clients.append(name)
         print("Selected clients: ", clients)
         return clients
-    
+
     # Read from log file and write it to listView_logs
     def update_logs(self):
         # TODO get the path from setting

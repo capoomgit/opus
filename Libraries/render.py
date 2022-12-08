@@ -1,10 +1,15 @@
 import subprocess
 import hou
-import capoom_utils as utils
 import sys
 import logging
+import os
 
+def render_smth(usd_path, save_path, project_id, work_id, version, frame_count):
+    omni_render_out = f"{save_path}/Render_{project_id}_{work_id}_{version}/"
+    res = os.system(f'C:/Users/capoom/AppData/Local/ov/pkg/isaac_sim-2022.1.1/python.bat P:/pipeline/standalone_dev/libs/omni_render.py {str(frame_count)} {usd_path} {omni_render_out}')
+    return True if res == 0 else False
 
+"""
 def render_smth(file_path, save_path, project_id, work_id, _version, render_engine, frame_count):
     hou.hipFile.clear(suppress_save_prompt=1)
     version = str(_version).zfill(4)
@@ -133,8 +138,6 @@ def render_smth(file_path, save_path, project_id, work_id, _version, render_engi
             rop.parm("execute").pressButton()
             hou.hipFile.save(f"{save_path}/Render_{project_id}_{work_id}_{version}.hip")
             import os
-            # TODO maybe get omniverse app from P:/ ? or just download it in all machines and 
-            # make it run pythonw rather than python so client doesn't get disturbed by the opening cmds
             # TODO check if all machines have isaac installed
             
             res = os.system(f'C:/Users/capoom/AppData/Local/ov/pkg/isaac_sim-2022.1.1/python.bat P:/pipeline/standalone_dev/libs/omni_render.py {str(frame_count)} {usd_out} {omni_render_out}')
@@ -203,3 +206,4 @@ def render_smth(file_path, save_path, project_id, work_id, _version, render_engi
     except Exception as e:
         sys.stderr.write(str(e))
         return False
+"""
