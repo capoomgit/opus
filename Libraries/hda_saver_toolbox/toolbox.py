@@ -38,12 +38,33 @@ def create_toolbox():
     # show_node_names_components = create_button("Show Nodes Company", panel_utils.show_node_belonging)
     # export_layout.addWidget(show_node_names_components)
 
-    # change_node_color = create_button("Change Node Color", panel_utils.change_node_color)
-    # utils_layout.addWidget(change_node_color)
-
     # Add the layout to the root widget
     export_widget.setLayout(export_layout)
     tab_widget.addTab(export_widget, "Export")
+    # Utils Layout
+    utils_widget = QtWidgets.QWidget()
+    utils_layout = QtWidgets.QVBoxLayout()
+    utils_layout.setAlignment(QtCore.Qt.AlignTop)
+
+    change_node_color = create_button("Change Node Color", panel_utils.change_node_color)
+    utils_layout.addWidget(change_node_color)
+
+    add_quick_material = create_button("Add Quick Material", panel_utils.add_quick_material)
+    utils_layout.addWidget(add_quick_material)
+
+    show_node_name = create_button("Show Node Name", panel_utils.show_node_name)
+    utils_layout.addWidget(show_node_name)
+
+    show_node_parms = create_button("Show Node Parms", panel_utils.show_node_parms)
+    utils_layout.addWidget(show_node_parms)
+
+    clear_groups_and_attrs = create_button("Clear Groups and Attrs", panel_utils.clear_groups_and_attribs)
+    utils_layout.addWidget(clear_groups_and_attrs)
+
+    utils_widget.setLayout(utils_layout)
+    tab_widget.addTab(utils_widget, "Utils")
+
+
     # Return the top-level widget.
     return tab_widget
 
