@@ -68,18 +68,13 @@ class CapoomServer():
         self.db_conn = None
         self.db_cur = None
 
+        # Command settings
 
-        # This stores the settings paths etc
-        # settings = {}
-        # try:
-        #     settings_file = open(f"{os.getcwd()}/settings.json", "r")
-        #     settings = json.loads(settings_file.read())
-        #     self.savePath = settings["savepath"]
-            
 
-        # except Exception as e:
-        #     logger.warning(e)
-        #     settings = {}
+        # TODO implement this
+        self.commandTimeout = 10 # In minutes
+        self.commandTimeout = self.commandTimeout * 60 # Converted to seconds
+
 
         try:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
