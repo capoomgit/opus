@@ -213,6 +213,12 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_4.addItem(self.verticalSpacer)
 
+        self.checkbox_startingstatus_cache = QCheckBox(self.verticalLayoutWidget_3)
+        self.checkbox_startingstatus_cache.setObjectName(u"checkbox_startingstatus_cache")
+        self.checkbox_startingstatus_cache.setChecked(True)
+
+        self.verticalLayout_4.addWidget(self.checkbox_startingstatus_cache)
+
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
         self.label_structure = QLabel(self.verticalLayoutWidget_3)
@@ -614,6 +620,7 @@ class Ui_MainWindow(object):
         self.label_prioval.setText(QCoreApplication.translate("MainWindow", u"50", None))
         self.button_createhouse.setText(QCoreApplication.translate("MainWindow", u"Cache Houses", None))
         self.button_render.setText(QCoreApplication.translate("MainWindow", u"Render Caches", None))
+        self.checkbox_startingstatus_cache.setText(QCoreApplication.translate("MainWindow", u"Immidiately start the job", None))
         self.label_structure.setText(QCoreApplication.translate("MainWindow", u"Structure", None))
         self.label_8.setText(QCoreApplication.translate("MainWindow", u"Render Settings", None))
         self.label_9.setText(QCoreApplication.translate("MainWindow", u"Project Id: ", None))
@@ -664,7 +671,6 @@ class Ui_MainWindow(object):
         self.label_stat.setText(QCoreApplication.translate("MainWindow", u"Error", None))
         self.menuSettings.setTitle(QCoreApplication.translate("MainWindow", u"Settings", None))
     # retranslateUi
-
 
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
