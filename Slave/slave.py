@@ -212,8 +212,7 @@ class CapoomSlave(threading.Thread):
         job_uuid = actual_data.data["uuid"]
         ref_version = str(version).zfill(4)
 
-        # TODO implement this
-        frame_count = 10
+        frame_count = actual_data.data["frame_count"]
 
         merge_file = f"P:/pipeline/standalone_dev/saved/{structure}/Project_{project_id}_v{ref_version}/Merged/Merged_{project_id}_{work_id}_{ref_version}.bgeo.sc"
         stage_save_path = f"P:/pipeline/standalone_dev/saved/{structure}/Project_{project_id}_v{ref_version}/Staged/"

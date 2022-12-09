@@ -35,7 +35,6 @@ GET_JOB = """SELECT * FROM "Jobs" WHERE job_uuid = %s"""
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
-
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
     QSize, QTime, QUrl, Qt)
@@ -69,33 +68,33 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName(u"centralwidget")
         self.verticalLayoutWidget = QWidget(self.centralwidget)
         self.verticalLayoutWidget.setObjectName(u"verticalLayoutWidget")
-        self.verticalLayoutWidget.setGeometry(QRect(230, 10, 1031, 641))
+        self.verticalLayoutWidget.setGeometry(QRect(230, 10, 1041, 651))
         self.verticalLayout = QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.tabWidget = QTabWidget(self.verticalLayoutWidget)
         self.tabWidget.setObjectName(u"tabWidget")
         self.tabWidget.setStyleSheet(u"")
-        self.tab = QWidget()
-        self.tab.setObjectName(u"tab")
-        self.verticalLayoutWidget_3 = QWidget(self.tab)
+        self.commands = QWidget()
+        self.commands.setObjectName(u"commands")
+        self.verticalLayoutWidget_3 = QWidget(self.commands)
         self.verticalLayoutWidget_3.setObjectName(u"verticalLayoutWidget_3")
-        self.verticalLayoutWidget_3.setGeometry(QRect(10, 30, 291, 571))
-        self.project_layout = QVBoxLayout(self.verticalLayoutWidget_3)
-        self.project_layout.setObjectName(u"project_layout")
-        self.project_layout.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayoutWidget_3.setGeometry(QRect(10, 20, 311, 591))
+        self.verticalLayout_4 = QVBoxLayout(self.verticalLayoutWidget_3)
+        self.verticalLayout_4.setObjectName(u"verticalLayout_4")
+        self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
         self.label_7 = QLabel(self.verticalLayoutWidget_3)
         self.label_7.setObjectName(u"label_7")
         self.label_7.setAlignment(Qt.AlignCenter)
 
-        self.project_layout.addWidget(self.label_7)
+        self.verticalLayout_4.addWidget(self.label_7)
 
         self.line_3 = QFrame(self.verticalLayoutWidget_3)
         self.line_3.setObjectName(u"line_3")
         self.line_3.setFrameShape(QFrame.HLine)
         self.line_3.setFrameShadow(QFrame.Sunken)
 
-        self.project_layout.addWidget(self.line_3)
+        self.verticalLayout_4.addWidget(self.line_3)
 
         self.horizontalLayout_7 = QHBoxLayout()
         self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
@@ -112,7 +111,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_7.addWidget(self.input_projectid)
 
 
-        self.project_layout.addLayout(self.horizontalLayout_7)
+        self.verticalLayout_4.addLayout(self.horizontalLayout_7)
 
         self.horizontalLayout_11 = QHBoxLayout()
         self.horizontalLayout_11.setObjectName(u"horizontalLayout_11")
@@ -133,7 +132,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_11.addWidget(self.input_count)
 
 
-        self.project_layout.addLayout(self.horizontalLayout_11)
+        self.verticalLayout_4.addLayout(self.horizontalLayout_11)
 
         self.horizontalLayout_20 = QHBoxLayout()
         self.horizontalLayout_20.setObjectName(u"horizontalLayout_20")
@@ -151,30 +150,19 @@ class Ui_MainWindow(object):
         self.horizontalLayout_20.addWidget(self.input_version)
 
 
-        self.project_layout.addLayout(self.horizontalLayout_20)
+        self.verticalLayout_4.addLayout(self.horizontalLayout_20)
 
         self.input_skipexist_cache = QCheckBox(self.verticalLayoutWidget_3)
         self.input_skipexist_cache.setObjectName(u"input_skipexist_cache")
         self.input_skipexist_cache.setChecked(True)
 
-        self.project_layout.addWidget(self.input_skipexist_cache)
+        self.verticalLayout_4.addWidget(self.input_skipexist_cache)
 
-        self.line_5 = QFrame(self.verticalLayoutWidget_3)
-        self.line_5.setObjectName(u"line_5")
-        self.line_5.setFrameShape(QFrame.HLine)
-        self.line_5.setFrameShadow(QFrame.Sunken)
-
-        self.project_layout.addWidget(self.line_5)
-
-        self.verticalLayout_6 = QVBoxLayout()
-        self.verticalLayout_6.setObjectName(u"verticalLayout_6")
         self.horizontalLayout = QHBoxLayout()
-        self.horizontalLayout.setSpacing(6)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.horizontalLayout.setSizeConstraint(QLayout.SetDefaultConstraint)
         self.label_prio = QLabel(self.verticalLayoutWidget_3)
         self.label_prio.setObjectName(u"label_prio")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Minimum)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.label_prio.sizePolicy().hasHeightForWidth())
@@ -184,77 +172,27 @@ class Ui_MainWindow(object):
 
         self.label_prioval = QLabel(self.verticalLayoutWidget_3)
         self.label_prioval.setObjectName(u"label_prioval")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
-        sizePolicy2.setHorizontalStretch(0)
-        sizePolicy2.setVerticalStretch(0)
-        sizePolicy2.setHeightForWidth(self.label_prioval.sizePolicy().hasHeightForWidth())
-        self.label_prioval.setSizePolicy(sizePolicy2)
-        self.label_prioval.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+        sizePolicy.setHeightForWidth(self.label_prioval.sizePolicy().hasHeightForWidth())
+        self.label_prioval.setSizePolicy(sizePolicy)
 
         self.horizontalLayout.addWidget(self.label_prioval)
 
 
-        self.verticalLayout_6.addLayout(self.horizontalLayout)
+        self.verticalLayout_4.addLayout(self.horizontalLayout)
 
         self.slider_priority = QSlider(self.verticalLayoutWidget_3)
         self.slider_priority.setObjectName(u"slider_priority")
-        self.slider_priority.setMaximum(100)
         self.slider_priority.setValue(50)
-        self.slider_priority.setTracking(True)
         self.slider_priority.setOrientation(Qt.Horizontal)
 
-        self.verticalLayout_6.addWidget(self.slider_priority)
+        self.verticalLayout_4.addWidget(self.slider_priority)
 
+        self.line_5 = QFrame(self.verticalLayoutWidget_3)
+        self.line_5.setObjectName(u"line_5")
+        self.line_5.setFrameShape(QFrame.HLine)
+        self.line_5.setFrameShadow(QFrame.Sunken)
 
-        self.project_layout.addLayout(self.verticalLayout_6)
-
-        self.line_2 = QFrame(self.verticalLayoutWidget_3)
-        self.line_2.setObjectName(u"line_2")
-        self.line_2.setFrameShape(QFrame.HLine)
-        self.line_2.setFrameShadow(QFrame.Sunken)
-
-        self.project_layout.addWidget(self.line_2)
-
-        self.verticalLayout_7 = QVBoxLayout()
-        self.verticalLayout_7.setObjectName(u"verticalLayout_7")
-        self.label_15 = QLabel(self.verticalLayoutWidget_3)
-        self.label_15.setObjectName(u"label_15")
-        self.label_15.setAlignment(Qt.AlignCenter)
-
-        self.verticalLayout_7.addWidget(self.label_15)
-
-        self.line_7 = QFrame(self.verticalLayoutWidget_3)
-        self.line_7.setObjectName(u"line_7")
-        self.line_7.setFrameShape(QFrame.HLine)
-        self.line_7.setFrameShadow(QFrame.Sunken)
-
-        self.verticalLayout_7.addWidget(self.line_7)
-
-        self.horizontalLayout_19 = QHBoxLayout()
-        self.horizontalLayout_19.setObjectName(u"horizontalLayout_19")
-        self.label_struct = QLabel(self.verticalLayoutWidget_3)
-        self.label_struct.setObjectName(u"label_struct")
-        sizePolicy.setHeightForWidth(self.label_struct.sizePolicy().hasHeightForWidth())
-        self.label_struct.setSizePolicy(sizePolicy)
-        self.label_struct.setMinimumSize(QSize(100, 0))
-
-        self.horizontalLayout_19.addWidget(self.label_struct)
-
-        self.input_structure = QComboBox(self.verticalLayoutWidget_3)
-        self.input_structure.setObjectName(u"input_structure")
-        self.input_structure.setMinimumSize(QSize(150, 0))
-
-        self.horizontalLayout_19.addWidget(self.input_structure)
-
-
-        self.verticalLayout_7.addLayout(self.horizontalLayout_19)
-
-
-        self.project_layout.addLayout(self.verticalLayout_7)
-
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-
-        self.project_layout.addItem(self.verticalSpacer)
+        self.verticalLayout_4.addWidget(self.line_5)
 
         self.horizontalLayout_6 = QHBoxLayout()
         self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
@@ -263,33 +201,51 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_6.addWidget(self.button_createhouse)
 
-        self.checkbox_startingstatus_cache = QCheckBox(self.verticalLayoutWidget_3)
-        self.checkbox_startingstatus_cache.setObjectName(u"checkbox_startingstatus_cache")
-        self.checkbox_startingstatus_cache.setChecked(True)
+        self.button_render = QPushButton(self.verticalLayoutWidget_3)
+        self.button_render.setObjectName(u"button_render")
 
-        self.horizontalLayout_6.addWidget(self.checkbox_startingstatus_cache)
+        self.horizontalLayout_6.addWidget(self.button_render)
 
 
-        self.project_layout.addLayout(self.horizontalLayout_6)
+        self.verticalLayout_4.addLayout(self.horizontalLayout_6)
 
-        self.verticalLayoutWidget_4 = QWidget(self.tab)
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.verticalLayout_4.addItem(self.verticalSpacer)
+
+        self.horizontalLayout_3 = QHBoxLayout()
+        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.label_structure = QLabel(self.verticalLayoutWidget_3)
+        self.label_structure.setObjectName(u"label_structure")
+
+        self.horizontalLayout_3.addWidget(self.label_structure)
+
+        self.input_structure = QComboBox(self.verticalLayoutWidget_3)
+        self.input_structure.setObjectName(u"input_structure")
+
+        self.horizontalLayout_3.addWidget(self.input_structure)
+
+
+        self.verticalLayout_4.addLayout(self.horizontalLayout_3)
+
+        self.verticalLayoutWidget_4 = QWidget(self.commands)
         self.verticalLayoutWidget_4.setObjectName(u"verticalLayoutWidget_4")
-        self.verticalLayoutWidget_4.setGeometry(QRect(330, 30, 321, 571))
-        self.render_layout = QVBoxLayout(self.verticalLayoutWidget_4)
-        self.render_layout.setObjectName(u"render_layout")
-        self.render_layout.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayoutWidget_4.setGeometry(QRect(350, 20, 321, 591))
+        self.verticalLayout_5 = QVBoxLayout(self.verticalLayoutWidget_4)
+        self.verticalLayout_5.setObjectName(u"verticalLayout_5")
+        self.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
         self.label_8 = QLabel(self.verticalLayoutWidget_4)
         self.label_8.setObjectName(u"label_8")
         self.label_8.setAlignment(Qt.AlignCenter)
 
-        self.render_layout.addWidget(self.label_8)
+        self.verticalLayout_5.addWidget(self.label_8)
 
         self.line_4 = QFrame(self.verticalLayoutWidget_4)
         self.line_4.setObjectName(u"line_4")
         self.line_4.setFrameShape(QFrame.HLine)
         self.line_4.setFrameShadow(QFrame.Sunken)
 
-        self.render_layout.addWidget(self.line_4)
+        self.verticalLayout_5.addWidget(self.line_4)
 
         self.horizontalLayout_13 = QHBoxLayout()
         self.horizontalLayout_13.setObjectName(u"horizontalLayout_13")
@@ -299,14 +255,14 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_13.addWidget(self.label_9)
 
-        self.input_renderuuid = QLineEdit(self.verticalLayoutWidget_4)
-        self.input_renderuuid.setObjectName(u"input_renderuuid")
-        self.input_renderuuid.setClearButtonEnabled(False)
+        self.input_projectid_render = QLineEdit(self.verticalLayoutWidget_4)
+        self.input_projectid_render.setObjectName(u"input_projectid_render")
+        self.input_projectid_render.setClearButtonEnabled(False)
 
-        self.horizontalLayout_13.addWidget(self.input_renderuuid)
+        self.horizontalLayout_13.addWidget(self.input_projectid_render)
 
 
-        self.render_layout.addLayout(self.horizontalLayout_13)
+        self.verticalLayout_5.addLayout(self.horizontalLayout_13)
 
         self.horizontalLayout_15 = QHBoxLayout()
         self.horizontalLayout_15.setObjectName(u"horizontalLayout_15")
@@ -329,7 +285,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_15.addWidget(self.input_engine)
 
 
-        self.render_layout.addLayout(self.horizontalLayout_15)
+        self.verticalLayout_5.addLayout(self.horizontalLayout_15)
 
         self.horizontalLayout_16 = QHBoxLayout()
         self.horizontalLayout_16.setObjectName(u"horizontalLayout_16")
@@ -350,7 +306,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_16.addWidget(self.input_type)
 
 
-        self.render_layout.addLayout(self.horizontalLayout_16)
+        self.verticalLayout_5.addLayout(self.horizontalLayout_16)
 
         self.horizontalLayout_14 = QHBoxLayout()
         self.horizontalLayout_14.setObjectName(u"horizontalLayout_14")
@@ -368,79 +324,69 @@ class Ui_MainWindow(object):
         self.horizontalLayout_14.addWidget(self.input_frame)
 
 
-        self.render_layout.addLayout(self.horizontalLayout_14)
+        self.verticalLayout_5.addLayout(self.horizontalLayout_14)
 
         self.input_skipexist_render = QCheckBox(self.verticalLayoutWidget_4)
         self.input_skipexist_render.setObjectName(u"input_skipexist_render")
 
-        self.render_layout.addWidget(self.input_skipexist_render)
+        self.verticalLayout_5.addWidget(self.input_skipexist_render)
 
         self.horizontalLayout_18 = QHBoxLayout()
         self.horizontalLayout_18.setObjectName(u"horizontalLayout_18")
+
+        self.verticalLayout_5.addLayout(self.horizontalLayout_18)
+
         self.button_omnisettings = QPushButton(self.verticalLayoutWidget_4)
         self.button_omnisettings.setObjectName(u"button_omnisettings")
 
-        self.horizontalLayout_18.addWidget(self.button_omnisettings)
-
-
-        self.render_layout.addLayout(self.horizontalLayout_18)
+        self.verticalLayout_5.addWidget(self.button_omnisettings)
 
         self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
-        self.render_layout.addItem(self.verticalSpacer_2)
+        self.verticalLayout_5.addItem(self.verticalSpacer_2)
 
-        self.horizontalLayout_3 = QHBoxLayout()
-        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
-        self.button_render = QPushButton(self.verticalLayoutWidget_4)
-        self.button_render.setObjectName(u"button_render")
-
-        self.horizontalLayout_3.addWidget(self.button_render)
-
-        self.checkbox_startingstatus_render = QCheckBox(self.verticalLayoutWidget_4)
-        self.checkbox_startingstatus_render.setObjectName(u"checkbox_startingstatus_render")
-        self.checkbox_startingstatus_render.setChecked(True)
-
-        self.horizontalLayout_3.addWidget(self.checkbox_startingstatus_render)
-
-
-        self.render_layout.addLayout(self.horizontalLayout_3)
-
-        self.verticalLayoutWidget_5 = QWidget(self.tab)
+        self.verticalLayoutWidget_5 = QWidget(self.commands)
         self.verticalLayoutWidget_5.setObjectName(u"verticalLayoutWidget_5")
-        self.verticalLayoutWidget_5.setGeometry(QRect(680, 30, 321, 571))
-        self.out_layout = QVBoxLayout(self.verticalLayoutWidget_5)
-        self.out_layout.setObjectName(u"out_layout")
-        self.out_layout.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayoutWidget_5.setGeometry(QRect(700, 20, 321, 591))
+        self.verticalLayout_3 = QVBoxLayout(self.verticalLayoutWidget_5)
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.label_14 = QLabel(self.verticalLayoutWidget_5)
         self.label_14.setObjectName(u"label_14")
         self.label_14.setAlignment(Qt.AlignCenter)
 
-        self.out_layout.addWidget(self.label_14)
+        self.verticalLayout_3.addWidget(self.label_14)
 
         self.line_8 = QFrame(self.verticalLayoutWidget_5)
         self.line_8.setObjectName(u"line_8")
         self.line_8.setFrameShape(QFrame.HLine)
         self.line_8.setFrameShadow(QFrame.Sunken)
 
-        self.out_layout.addWidget(self.line_8)
+        self.verticalLayout_3.addWidget(self.line_8)
+
+        self.input_stage_cache = QCheckBox(self.verticalLayoutWidget_5)
+        self.input_stage_cache.setObjectName(u"input_stage_cache")
+        self.input_stage_cache.setChecked(False)
+
+        self.verticalLayout_3.addWidget(self.input_stage_cache)
 
         self.input_render_at_cache = QCheckBox(self.verticalLayoutWidget_5)
         self.input_render_at_cache.setObjectName(u"input_render_at_cache")
         self.input_render_at_cache.setChecked(False)
 
-        self.out_layout.addWidget(self.input_render_at_cache)
+        self.verticalLayout_3.addWidget(self.input_render_at_cache)
 
         self.input_keepall = QCheckBox(self.verticalLayoutWidget_5)
         self.input_keepall.setObjectName(u"input_keepall")
         self.input_keepall.setChecked(True)
 
-        self.out_layout.addWidget(self.input_keepall)
+        self.verticalLayout_3.addWidget(self.input_keepall)
 
         self.label_3 = QLabel(self.verticalLayoutWidget_5)
         self.label_3.setObjectName(u"label_3")
         self.label_3.setAlignment(Qt.AlignCenter)
 
-        self.out_layout.addWidget(self.label_3)
+        self.verticalLayout_3.addWidget(self.label_3)
 
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
@@ -475,38 +421,33 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addWidget(self.input_cache_gltf)
 
 
-        self.out_layout.addLayout(self.horizontalLayout_2)
+        self.verticalLayout_3.addLayout(self.horizontalLayout_2)
 
         self.line_6 = QFrame(self.verticalLayoutWidget_5)
         self.line_6.setObjectName(u"line_6")
         self.line_6.setFrameShape(QFrame.HLine)
         self.line_6.setFrameShadow(QFrame.Sunken)
 
-        self.out_layout.addWidget(self.line_6)
+        self.verticalLayout_3.addWidget(self.line_6)
 
         self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
-        self.out_layout.addItem(self.verticalSpacer_3)
+        self.verticalLayout_3.addItem(self.verticalSpacer_3)
 
-        self.line_9 = QFrame(self.tab)
-        self.line_9.setObjectName(u"line_9")
-        self.line_9.setGeometry(QRect(310, 30, 16, 571))
-        self.line_9.setFrameShape(QFrame.VLine)
-        self.line_9.setFrameShadow(QFrame.Sunken)
-        self.line_10 = QFrame(self.tab)
-        self.line_10.setObjectName(u"line_10")
-        self.line_10.setGeometry(QRect(660, 30, 16, 571))
-        self.line_10.setFrameShape(QFrame.VLine)
-        self.line_10.setFrameShadow(QFrame.Sunken)
-        self.tabWidget.addTab(self.tab, "")
-        self.tab_2 = QWidget()
-        self.tab_2.setObjectName(u"tab_2")
-        self.horizontalLayoutWidget_5 = QWidget(self.tab_2)
+        self.tabWidget.addTab(self.commands, "")
+        self.jobs = QWidget()
+        self.jobs.setObjectName(u"jobs")
+        self.horizontalLayoutWidget_5 = QWidget(self.jobs)
         self.horizontalLayoutWidget_5.setObjectName(u"horizontalLayoutWidget_5")
-        self.horizontalLayoutWidget_5.setGeometry(QRect(0, 580, 1021, 41))
+        self.horizontalLayoutWidget_5.setGeometry(QRect(10, 590, 1011, 31))
         self.horizontalLayout_12 = QHBoxLayout(self.horizontalLayoutWidget_5)
         self.horizontalLayout_12.setObjectName(u"horizontalLayout_12")
         self.horizontalLayout_12.setContentsMargins(0, 0, 0, 0)
+        self.button_start = QPushButton(self.horizontalLayoutWidget_5)
+        self.button_start.setObjectName(u"button_start")
+
+        self.horizontalLayout_12.addWidget(self.button_start)
+
         self.button_cancel = QPushButton(self.horizontalLayoutWidget_5)
         self.button_cancel.setObjectName(u"button_cancel")
 
@@ -527,11 +468,6 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_12.addWidget(self.button_updateworkers)
 
-        self.button_updateworkers_2 = QPushButton(self.horizontalLayoutWidget_5)
-        self.button_updateworkers_2.setObjectName(u"button_updateworkers_2")
-
-        self.horizontalLayout_12.addWidget(self.button_updateworkers_2)
-
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.horizontalLayout_12.addItem(self.horizontalSpacer)
@@ -541,30 +477,33 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_12.addWidget(self.checkbox_autorljobs)
 
-        self.button_resreshjobs = QPushButton(self.horizontalLayoutWidget_5)
-        self.button_resreshjobs.setObjectName(u"button_resreshjobs")
+        self.button_refreshjobs = QPushButton(self.horizontalLayoutWidget_5)
+        self.button_refreshjobs.setObjectName(u"button_refreshjobs")
 
-        self.horizontalLayout_12.addWidget(self.button_resreshjobs)
+        self.horizontalLayout_12.addWidget(self.button_refreshjobs)
 
         self.button_clearhistory = QPushButton(self.horizontalLayoutWidget_5)
         self.button_clearhistory.setObjectName(u"button_clearhistory")
 
         self.horizontalLayout_12.addWidget(self.button_clearhistory)
 
-        self.verticalLayoutWidget_6 = QWidget(self.tab_2)
+        self.verticalLayoutWidget_6 = QWidget(self.jobs)
         self.verticalLayoutWidget_6.setObjectName(u"verticalLayoutWidget_6")
-        self.verticalLayoutWidget_6.setGeometry(QRect(0, 10, 1021, 561))
+        self.verticalLayoutWidget_6.setGeometry(QRect(10, 10, 1021, 531))
         self.jobsLayout = QVBoxLayout(self.verticalLayoutWidget_6)
         self.jobsLayout.setObjectName(u"jobsLayout")
         self.jobsLayout.setSizeConstraint(QLayout.SetFixedSize)
         self.jobsLayout.setContentsMargins(0, 0, 0, 0)
-        self.tabWidget.addTab(self.tab_2, "")
+        self.tabWidget.addTab(self.jobs, "")
         self.logs = QWidget()
         self.logs.setObjectName(u"logs")
         self.listView_logs = QListView(self.logs)
         self.listView_logs.setObjectName(u"listView_logs")
-        self.listView_logs.setGeometry(QRect(10, 10, 801, 441))
+        self.listView_logs.setGeometry(QRect(10, 10, 1021, 601))
         self.tabWidget.addTab(self.logs, "")
+        self.hda_params = QWidget()
+        self.hda_params.setObjectName(u"hda_params")
+        self.tabWidget.addTab(self.hda_params, "")
 
         self.verticalLayout.addWidget(self.tabWidget)
 
@@ -577,6 +516,9 @@ class Ui_MainWindow(object):
         self.label = QLabel(self.verticalLayoutWidget_2)
         self.label.setObjectName(u"label")
         self.label.setEnabled(True)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
         self.label.setSizePolicy(sizePolicy2)
         self.label.setMinimumSize(QSize(0, 16))
@@ -611,6 +553,11 @@ class Ui_MainWindow(object):
         self.list_clients.setObjectName(u"list_clients")
 
         self.verticalLayout_2.addWidget(self.list_clients)
+
+        self.button_backupdb = QPushButton(self.verticalLayoutWidget_2)
+        self.button_backupdb.setObjectName(u"button_backupdb")
+
+        self.verticalLayout_2.addWidget(self.button_backupdb)
 
         self.button_connect = QPushButton(self.verticalLayoutWidget_2)
         self.button_connect.setObjectName(u"button_connect")
@@ -663,15 +610,14 @@ class Ui_MainWindow(object):
         self.label_13.setText(QCoreApplication.translate("MainWindow", u"Version:", None))
         self.input_version.setPlaceholderText("")
         self.input_skipexist_cache.setText(QCoreApplication.translate("MainWindow", u"Skip Existing Files - Cache", None))
-        self.label_prio.setText(QCoreApplication.translate("MainWindow", u"Priority -", None))
-        self.label_prioval.setText(QCoreApplication.translate("MainWindow", u"val", None))
-        self.label_15.setText(QCoreApplication.translate("MainWindow", u"Create Settings", None))
-        self.label_struct.setText(QCoreApplication.translate("MainWindow", u"Structure", None))
+        self.label_prio.setText(QCoreApplication.translate("MainWindow", u"Priority - ", None))
+        self.label_prioval.setText(QCoreApplication.translate("MainWindow", u"50", None))
         self.button_createhouse.setText(QCoreApplication.translate("MainWindow", u"Cache Houses", None))
-        self.checkbox_startingstatus_cache.setText(QCoreApplication.translate("MainWindow", u"Start job automatically", None))
+        self.button_render.setText(QCoreApplication.translate("MainWindow", u"Render Caches", None))
+        self.label_structure.setText(QCoreApplication.translate("MainWindow", u"Structure", None))
         self.label_8.setText(QCoreApplication.translate("MainWindow", u"Render Settings", None))
-        self.label_9.setText(QCoreApplication.translate("MainWindow", u"Cache UUID's", None))
-        self.input_renderuuid.setPlaceholderText("")
+        self.label_9.setText(QCoreApplication.translate("MainWindow", u"Project Id: ", None))
+        self.input_projectid_render.setPlaceholderText("")
         self.label_11.setText(QCoreApplication.translate("MainWindow", u"Engine", None))
         self.input_engine.setItemText(0, QCoreApplication.translate("MainWindow", u"Omniverse", None))
         self.input_engine.setItemText(1, QCoreApplication.translate("MainWindow", u"Mantra", None))
@@ -687,9 +633,8 @@ class Ui_MainWindow(object):
         self.input_frame.setPlaceholderText("")
         self.input_skipexist_render.setText(QCoreApplication.translate("MainWindow", u"Skip Existing Files - Render", None))
         self.button_omnisettings.setText(QCoreApplication.translate("MainWindow", u"Omniverse Render Settings", None))
-        self.button_render.setText(QCoreApplication.translate("MainWindow", u"Render Caches", None))
-        self.checkbox_startingstatus_render.setText(QCoreApplication.translate("MainWindow", u"Start job automatically", None))
         self.label_14.setText(QCoreApplication.translate("MainWindow", u"Output Settings", None))
+        self.input_stage_cache.setText(QCoreApplication.translate("MainWindow", u"Stage caches while creating", None))
         self.input_render_at_cache.setText(QCoreApplication.translate("MainWindow", u"Render While Creating", None))
         self.input_keepall.setText(QCoreApplication.translate("MainWindow", u"Keep all caches after merge", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"File Formats", None))
@@ -698,20 +643,22 @@ class Ui_MainWindow(object):
         self.input_cache_bgeo.setText(QCoreApplication.translate("MainWindow", u"bgeo.sc", None))
         self.input_cache_glb.setText(QCoreApplication.translate("MainWindow", u"glb", None))
         self.input_cache_gltf.setText(QCoreApplication.translate("MainWindow", u"gltf", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), QCoreApplication.translate("MainWindow", u"Commands", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.commands), QCoreApplication.translate("MainWindow", u"Commands", None))
+        self.button_start.setText(QCoreApplication.translate("MainWindow", u"Start Job", None))
         self.button_cancel.setText(QCoreApplication.translate("MainWindow", u"Cancel Job", None))
         self.button_pause.setText(QCoreApplication.translate("MainWindow", u"Pause", None))
         self.button_resume.setText(QCoreApplication.translate("MainWindow", u"Resume", None))
         self.button_updateworkers.setText(QCoreApplication.translate("MainWindow", u"Update Workers", None))
-        self.button_updateworkers_2.setText(QCoreApplication.translate("MainWindow", u"Change Priority", None))
         self.checkbox_autorljobs.setText(QCoreApplication.translate("MainWindow", u"Auto refresh", None))
-        self.button_resreshjobs.setText(QCoreApplication.translate("MainWindow", u"Refresh Jobslist", None))
+        self.button_refreshjobs.setText(QCoreApplication.translate("MainWindow", u"Refresh Jobslist", None))
         self.button_clearhistory.setText(QCoreApplication.translate("MainWindow", u"Clear History", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QCoreApplication.translate("MainWindow", u"Jobs", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.jobs), QCoreApplication.translate("MainWindow", u"Jobs", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.logs), QCoreApplication.translate("MainWindow", u"Logs", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.hda_params), QCoreApplication.translate("MainWindow", u"HDA setup", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"Clients", None))
         self.button_select_avails.setText(QCoreApplication.translate("MainWindow", u"Sel. Availables", None))
         self.button_select_all.setText(QCoreApplication.translate("MainWindow", u"Force All", None))
+        self.button_backupdb.setText(QCoreApplication.translate("MainWindow", u"Backup Database", None))
         self.button_connect.setText(QCoreApplication.translate("MainWindow", u"Connect", None))
         self.button_refresh.setText(QCoreApplication.translate("MainWindow", u"Refresh Client List", None))
         self.label_stat.setText(QCoreApplication.translate("MainWindow", u"Error", None))
@@ -728,6 +675,7 @@ class Ui_MainWindow(object):
 
 
     def __init__(self, MainWindow):
+
         # Create an admin client
         self.admin = None
         self.adminthread = None
@@ -737,6 +685,7 @@ class Ui_MainWindow(object):
 
 
         self.mainWindow = MainWindow
+
         # Create the GUI
         self.setupUi(MainWindow)
         self.init_database()
@@ -780,7 +729,7 @@ class Ui_MainWindow(object):
         self.button_updateworkers.clicked.connect(self.send_new_workers)
 
         # Jobs Tab
-        self.button_resreshjobs.clicked.connect(self.jobsview.refresh)
+        self.button_refreshjobs.clicked.connect(self.jobsview.refresh)
         self.button_clearhistory.clicked.connect(self.jobsview.clear_job_history)
         self.button_omnisettings.clicked.connect(self.open_omni_settings)
         self.button_pause.clicked.connect(self.pause_job)
@@ -1127,8 +1076,15 @@ class Ui_MainWindow(object):
 
                 all_data["structure"] = self.input_structure.currentText()
 
-                # TODO implement this
-                all_data["stage"] = True
+                all_data["stage"] = self.input_stage_cache.isChecked()
+
+                if self.input_stage_cache.isChecked():
+                    if self.input_frame.text() is None or self.input_frame.text() == "":
+                        # TODO open dialog
+                        print("Please enter a frame")
+                        return
+                    else:
+                        all_data["frame_count"] = int(self.input_frame.text())
 
                 all_data.update(render_data)
                 all_data.update(cache_data)
@@ -1342,7 +1298,7 @@ class Ui_MainWindow(object):
         self.update_status(self.check_connection())
 
 
-        if self.tab_2.isVisible():
+        if self.jobs.isVisible():
             if self.checkbox_autorljobs.isChecked():
                 self.jobsview.refresh()
 

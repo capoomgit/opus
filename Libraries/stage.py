@@ -3,6 +3,7 @@ import hou
 # TODO material support
 def stage_usd(cache_path, save_path, project_id, work_id, version, frame_count):
     try:
+        hou.hipFile.clear(suppress_save_prompt=True)
         obj = hou.node("/obj")
 
         # TODO get the cams from db?

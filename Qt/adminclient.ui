@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1087</width>
-    <height>616</height>
+    <width>1280</width>
+    <height>720</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -37,8 +37,8 @@
      <rect>
       <x>230</x>
       <y>10</y>
-      <width>831</width>
-      <height>531</height>
+      <width>1041</width>
+      <height>651</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
@@ -48,9 +48,9 @@
         <string notr="true"/>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>0</number>
        </property>
-       <widget class="QWidget" name="tab">
+       <widget class="QWidget" name="commands">
         <attribute name="title">
          <string>Commands</string>
         </attribute>
@@ -58,9 +58,9 @@
          <property name="geometry">
           <rect>
            <x>10</x>
-           <y>30</y>
-           <width>261</width>
-           <height>371</height>
+           <y>20</y>
+           <width>311</width>
+           <height>591</height>
           </rect>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -179,6 +179,46 @@
            </widget>
           </item>
           <item>
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <item>
+             <widget class="QLabel" name="label_prio">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Priority - </string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_prioval">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>50</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QSlider" name="slider_priority">
+            <property name="value">
+             <number>50</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="Line" name="line_5">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
@@ -216,15 +256,29 @@
             </property>
            </spacer>
           </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <item>
+             <widget class="QLabel" name="label_structure">
+              <property name="text">
+               <string>Structure</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="input_structure"/>
+            </item>
+           </layout>
+          </item>
          </layout>
         </widget>
         <widget class="QWidget" name="verticalLayoutWidget_4">
          <property name="geometry">
           <rect>
-           <x>290</x>
-           <y>30</y>
-           <width>260</width>
-           <height>371</height>
+           <x>350</x>
+           <y>20</y>
+           <width>321</width>
+           <height>591</height>
           </rect>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -412,7 +466,7 @@
            <layout class="QHBoxLayout" name="horizontalLayout_18"/>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton">
+           <widget class="QPushButton" name="button_omnisettings">
             <property name="text">
              <string>Omniverse Render Settings</string>
             </property>
@@ -436,10 +490,10 @@
         <widget class="QWidget" name="verticalLayoutWidget_5">
          <property name="geometry">
           <rect>
-           <x>570</x>
-           <y>30</y>
-           <width>255</width>
-           <height>371</height>
+           <x>700</x>
+           <y>20</y>
+           <width>321</width>
+           <height>591</height>
           </rect>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -457,6 +511,16 @@
            <widget class="Line" name="line_8">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="input_stage_cache">
+            <property name="text">
+             <string>Stage caches while creating</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
             </property>
            </widget>
           </item>
@@ -567,7 +631,7 @@
          </layout>
         </widget>
        </widget>
-       <widget class="QWidget" name="tab_2">
+       <widget class="QWidget" name="jobs">
         <attribute name="title">
          <string>Jobs</string>
         </attribute>
@@ -575,12 +639,19 @@
          <property name="geometry">
           <rect>
            <x>10</x>
-           <y>470</y>
-           <width>811</width>
+           <y>590</y>
+           <width>1011</width>
            <height>31</height>
           </rect>
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_12">
+          <item>
+           <widget class="QPushButton" name="button_start">
+            <property name="text">
+             <string>Start Job</string>
+            </property>
+           </widget>
+          </item>
           <item>
            <widget class="QPushButton" name="button_cancel">
             <property name="text">
@@ -623,14 +694,14 @@
            </spacer>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox">
+           <widget class="QCheckBox" name="checkbox_autorljobs">
             <property name="text">
              <string>Auto refresh</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton_2">
+           <widget class="QPushButton" name="button_refreshjobs">
             <property name="text">
              <string>Refresh Jobslist</string>
             </property>
@@ -650,8 +721,8 @@
           <rect>
            <x>10</x>
            <y>10</y>
-           <width>811</width>
-           <height>441</height>
+           <width>1021</width>
+           <height>531</height>
           </rect>
          </property>
          <layout class="QVBoxLayout" name="jobsLayout">
@@ -670,11 +741,16 @@
           <rect>
            <x>10</x>
            <y>10</y>
-           <width>801</width>
-           <height>441</height>
+           <width>1021</width>
+           <height>601</height>
           </rect>
          </property>
         </widget>
+       </widget>
+       <widget class="QWidget" name="hda_params">
+        <attribute name="title">
+         <string>HDA setup</string>
+        </attribute>
        </widget>
       </widget>
      </item>
@@ -686,7 +762,7 @@
       <x>10</x>
       <y>10</y>
       <width>211</width>
-      <height>531</height>
+      <height>641</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -744,7 +820,14 @@
       </layout>
      </item>
      <item>
-      <widget class="QListWidget" name="listWidget"/>
+      <widget class="QListWidget" name="list_clients"/>
+     </item>
+     <item>
+      <widget class="QPushButton" name="button_backupdb">
+       <property name="text">
+        <string>Backup Database</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QPushButton" name="button_connect">
@@ -770,8 +853,8 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>550</y>
-      <width>1051</width>
+      <y>660</y>
+      <width>1261</width>
       <height>21</height>
      </rect>
     </property>
@@ -788,7 +871,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1087</width>
+     <width>1280</width>
      <height>22</height>
     </rect>
    </property>
