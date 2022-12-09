@@ -117,7 +117,7 @@ class CapoomAdminClient(threading.Thread):
 
     def backup_database(self):
         """Backs up the database"""
-        self.commands.append(CapoomResponse("backupdb",{}, f"{socket.gethostname()} is backing up the database", logginglvl=logging.INFO))
+        self.commands.append(CapoomResponse("backup_db",{}, f"{socket.gethostname()} is backing up the database", logginglvl=logging.INFO))
 
     def update_clients(self):
         # self.commands.append(CapoomResponse("updateClients", {}, "Update clients"))
