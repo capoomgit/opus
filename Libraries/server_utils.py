@@ -37,5 +37,5 @@ class CapoomWork:
         self.start_time = time.time()
 
     def get_running_time(self):
-        # Returns the time in seconds
+        '''Returns the running time in seconds'''
         return time.time() - self.start_time
