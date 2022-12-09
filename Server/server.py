@@ -13,7 +13,7 @@ import subprocess
 import psycopg2
 import psycopg2.extras
 from consts import ClientRanks, ClientStatus, JobStatus
-from server_utils import CapoomCommand, CapoomResponse
+from server_utils import CapoomCommand, CapoomResponse, CapoomWork
 from logger import setup_logger
 import google_chat
 from get_credentials import get_credentials
@@ -62,7 +62,7 @@ class CapoomServer():
         # Added later on
         self.all_stats = {}
         self.all_ranks = {}
-        self.assigned = {}
+        self.assigned = []
 
         # Database connection
         self.db_conn = None
@@ -172,6 +172,16 @@ class CapoomServer():
             if key == uuid:
                 return value
 
+    def get_assigned_CapoomWork_by_sockUUID(self, sockUUID):
+        for assigned in self.assigned:
+            if assigned.sock_uuid == sockUUID:
+                return assigned
+
+    def get_assigned_CapoomWork_by_cmduuid_workid(self, cmduuid, workid):
+        for assigned in self.assigned:
+            if assigned.cmd_uuid == cmduuid and assigned.work_id == workid:
+                return assigned
+                
     #Remove disconnected sockets 
     def remove_sock(self,s,message):
 
@@ -190,9 +200,9 @@ class CapoomServer():
             if s_uuid in self.all_ranks:
                 logger.debug(f"Removing {disconnected_address} from all_ranks")
                 self.all_ranks.pop(s_uuid)
-            if s_uuid in self.assigned:
-                logger.debug(f"Removing {disconnected_address} from assigned")
-                self.assigned.pop(s_uuid)
+            if self.get_assigned_CapoomWork_by_sockUUID(s_uuid):
+                logger.debug(f"Removing {disconnected_address} work from assigned")
+                self.assigned.remove(self.get_assigned_CapoomWork_by_sockUUID(s_uuid))
 
             self.send_cl_to_admins()
 
@@ -242,7 +252,7 @@ class CapoomServer():
             self.send_cmds_to_db()
             
         #clear assigneds
-        self.assigned = {}
+        self.assigned = []
 
     def rem_cmds(self, command, reason):
 
@@ -403,6 +413,12 @@ class CapoomServer():
                 cmd.sockets.append(conn)
                 logger.info(f"Added new sock to command {cmd.type} {cmd.data['projectid']} {cmd.version} {cmd.count}")
 
+    def rm_assigned_CapoomWork_by_cmd_id_and_work_id(self, cmd_uuid, work_id):
+        for work in self.assigned:
+            if work.cmd_uuid == cmd_uuid and work.work_id == work_id:
+                self.assigned.remove(work)
+                logger.info(f"Removed assigned work {work_id}")
+                break
 
     def read_responses(self, unpickled, sock):
         sock_uuid = self.get_sock_uuid(sock)
@@ -465,11 +481,12 @@ class CapoomServer():
             cmd_uuid = unpickled.data["uuid"]
     
             # TODO use the CapoomWork class for Works and get rid of (cmd_uuid, workid) tuples
-            if (cmd_uuid, workid) in self.assigned.values():
+            if self.get_assigned_CapoomWork_by_cmduuid_workid(cmd_uuid, workid) is not None:
 
                 
                 # Remove from assigned
-                self.assigned = {k: v for k, v in self.assigned.items() if v != (cmd_uuid, workid)}
+                # self.assigned = {k: v for k, v in self.assigned.items() if v != (cmd_uuid, workid)}
+                self.rm_assigned_CapoomWork_by_cmd_id_and_work_id(cmd_uuid, workid)
                 
                 if self.get_cmd_by_uuid(cmd_uuid) is None:
                     logger.warning(f"Command with uuid {cmd_uuid} not found")
@@ -536,7 +553,8 @@ class CapoomServer():
             return
 
         sock_uuid = self.get_sock_uuid(socket)
-        if sock_uuid in self.assigned.keys():
+
+        if sock_uuid in [x.sock_uuid for x in self.assigned if x.sock_uuid == sock_uuid]:
             # Client disconnected during work
             if socket not in self.all_connections:
                 self.remove_sock(socket, "Client disconnected during work")
@@ -568,7 +586,7 @@ class CapoomServer():
                         if target_cmd in self.commands:
         
                             for workid in cmd.remaining:
-                                if (cmd.uuid, workid) not in self.assigned.values() and workid not in target_cmd.remaining:
+                                if self.get_assigned_CapoomWork_by_cmduuid_workid(cmd.uuid, workid) not in self.assigned and workid not in target_cmd.remaining:
                                     workid_to_assign = workid
                                     break
 
@@ -582,7 +600,7 @@ class CapoomServer():
                 
                 else:
                     for workid in cmd.remaining:
-                        if (cmd.uuid, workid) not in self.assigned.values():
+                        if self.get_assigned_CapoomWork_by_cmduuid_workid(cmd.uuid, workid) not in self.assigned:
                             workid_to_assign = workid
                             break
                     
@@ -601,7 +619,7 @@ class CapoomServer():
                         return
 
                     else:
-                        self.assigned[sock_uuid] = (cmd.uuid, workid_to_assign)
+                        self.assigned.append(CapoomWork(sock_uuid, cmd.uuid, workid_to_assign))
                         
 
                         datas = cmd.data.copy()
@@ -620,11 +638,11 @@ class CapoomServer():
                 else:
                     # Something went wrong
 
-                    if len(cmd.remaining) > 0 and len([x for x in self.assigned.values() if x[0] == cmd.uuid]) == len(cmd.remaining):
+                    if len(cmd.remaining) > 0 and len([x for x in self.assigned if x.cmd_uuid == cmd.uuid]) == len(cmd.remaining):
                         logger.debug("All workids are assigned, but not all workids are done")
                         return
 
-                    elif len(cmd.remaining) > 0 and len([x for x in self.assigned.values() if x[0] == cmd.uuid]) == 0 and cmd.type == "render":
+                    elif len(cmd.remaining) > 0 and len([x for x in self.assigned if x.cmd_uuid == cmd.uuid]) == 0 and cmd.type == "render":
                         logger.debug("No workids are assigned, but not all workids are done, waiting for new cache to render")
                         # cmd.data["error_count"] += 1
                         return
@@ -664,7 +682,7 @@ class CapoomServer():
             try:
                 logger.info("Backing up database")
 
-                backup_date = datetime.datetime.now().strftime("%d-%m-%Y")
+                backup_date = datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
                
                 subprocess.Popen(f"pg_dump -U postgres -d opusdb -f P:/pipeline/standalone/db_backup/backup_{backup_date}.sql")
             except Exception as e:

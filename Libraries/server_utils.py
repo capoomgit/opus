@@ -31,7 +31,8 @@ class CapoomCommand:
             self.initalized_remaining = True
 
 class CapoomWork:
-    def __init__(self, cmd_uuid, work_id):
+    def __init__(self, sock_uuid, cmd_uuid, work_id):
+        self.sock_uuid = sock_uuid
         self.cmd_uuid = cmd_uuid
         self.work_id = work_id
         self.start_time = time.time()
