@@ -464,6 +464,7 @@ class CapoomServer():
             result = unpickled.data["result"]
             cmd_uuid = unpickled.data["uuid"]
     
+            # TODO use the CapoomWork class for Works and get rid of (cmd_uuid, workid) tuples
             if (cmd_uuid, workid) in self.assigned.values():
 
                 

@@ -1,5 +1,5 @@
 from uuid import uuid4
-import logging
+import logging, time
 class CapoomResponse:
     def __init__(self, type, data, message, logginglvl = logging.DEBUG):
         self.type = type
@@ -29,3 +29,13 @@ class CapoomCommand:
         if not self.initalized_remaining:
             self.remaining = [x for x in range(self.count)]
             self.initalized_remaining = True
+
+class CapoomWork:
+    def __init__(self, cmd_uuid, work_id):
+        self.cmd_uuid = cmd_uuid
+        self.work_id = work_id
+        self.start_time = time.time()
+
+    def get_running_time(self):
+        # Returns the time in seconds
+        return time.time() - self.start_time
