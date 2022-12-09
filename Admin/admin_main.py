@@ -724,7 +724,7 @@ class Ui_MainWindow(object):
         self.button_select_avails.clicked.connect(self.select_avails)
         self.button_connect.clicked.connect(self.init_admin)
         self.button_refresh.clicked.connect(self.get_clients_from_server)
-
+        self.button_backupdb.clicked.connect(self.backup_database)
         # Commands Tab
         self.button_createhouse.clicked.connect(self.create_house)
         self.button_render.clicked.connect(self.render)
@@ -876,7 +876,7 @@ class Ui_MainWindow(object):
         selection = [item.text() for item in self.list_clients.selectedItems()]
 
         selected_jobs, _ = self.jobsview.get_selected_jobs()
-        if len(selected_jobs) > 0 and self.tab_2.isVisible():
+        if len(selected_jobs) > 0 and self.jobs.isVisible():
             return
 
         if self.admin is not None:
@@ -940,12 +940,15 @@ class Ui_MainWindow(object):
                     if self.list_clients.item(item).text() == sel:
                         self.list_clients.item(item).setSelected(True)
 
+    def backup_database(self):
+        if self.admin is not None:
+            self.admin.backup_database()
 
     # This displays the jobs workers on the client list (by checking/unchecking the boxes)
     def selection_of_workers_for_job(self):
         selected_jobs, _ = self.jobsview.get_selected_jobs()
 
-        if selected_jobs is not None and len(selected_jobs) > 0 and self.tab_2.isVisible():
+        if selected_jobs is not None and len(selected_jobs) > 0 and self.jobs.isVisible():
             self.job_workers = self.jobsview.get_selected_jobs_workers()
             self.job_workers = [x for x in self.job_workers if x is not None]
 

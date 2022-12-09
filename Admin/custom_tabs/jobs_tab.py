@@ -147,6 +147,8 @@ class JobView(QVBoxLayout):
         if self.tree_view.selectionModel():
             self.tree_view.selectionModel().selectionChanged.connect(self.main.selection_of_workers_for_job)
 
+        self.remove_deleted_jobs()
+
         # We don't want to get data column
         # TODO maybe there is a better way of getting all columns except one
         self.db_cur.execute("""SELECT type, project_id, version, status, remaining, count, assigner, priority, start_time, job_uuid, end_time, workers FROM "Jobs" """)
@@ -279,24 +281,25 @@ class JobView(QVBoxLayout):
             CLEAR_JOBS = """DELETE FROM "Jobs" WHERE status=%s or status=%s or status=%s"""
             self.db_cur.execute(CLEAR_JOBS, (JobStatus.COMPLETED.value, JobStatus.CANCELLED.value, JobStatus.FAILED.value))
             self.db_conn.commit()
-
-            to_remove = []
-            for row in range(self.tree_model.rowCount()):
-                rowuuid = self.tree_model.item(row, 11)
-                CHECK_JOB_EXITST = """SELECT job_uuid FROM "Jobs" WHERE job_uuid = %s"""
-                self.db_cur.execute(CHECK_JOB_EXITST, (rowuuid.text(),))
-                job_exists = self.db_cur.fetchone()
-                if job_exists is None or len(job_exists) == 0:
-                    print("JOB DOESNT EXIST", job_exists)
-                    to_remove.append(row)
-
-            for row in to_remove:
-                self.tree_model.removeRow(row)
-
             self.refresh()
         else:
             self.main.open_rusure("You must be an admin to clear the job history")
 
+    def remove_deleted_jobs(self):
+        to_remove = []
+        for row in range(self.tree_model.rowCount()):
+            rowuuid = self.tree_model.item(row, 11)
+            CHECK_JOB_EXITST = """SELECT job_uuid FROM "Jobs" WHERE job_uuid = %s"""
+            self.db_cur.execute(CHECK_JOB_EXITST, (rowuuid.text(),))
+            job_exists = self.db_cur.fetchone()
+            if job_exists is None or len(job_exists) == 0:
+                print("JOB DOESNT EXIST", job_exists)
+                to_remove.append(row)
+
+        for row in to_remove:
+            self.tree_model.removeRow(row)
+
+        return
     def right_click_menu(self, position):
         menu = QMenu()
         menu.addAction("Copy Job UUID", self.copy_selected_job_uuid)

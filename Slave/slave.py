@@ -261,24 +261,6 @@ class CapoomSlave(threading.Thread):
             logger.error(f"Failed to render {structure} for project {project_id} and work {work_id} for version {version}, UUID: {job_uuid}\nReason: {render_result}")
             return False
 
-
-        # to_send = None
-
-        # if render_result:
-        #     to_send = CapoomResponse("donework",
-        #                             {"result":True, "workid":work_id, "uuid":job_uuid},
-        #                             f"Successfully rendered {structure} for project {project_id} and work {work_id} for version {version}, UUID: {job_uuid}",
-        #                             logginglvl=logging.INFO)
-        # else:
-        #     to_send = CapoomResponse("donework",
-        #                             {"result":False, "workid":work_id, "uuid":job_uuid},
-        #                             f"Failed to render {structure} for project {project_id} and work {work_id} for version {version}, UUID: {job_uuid}",
-        #                             logginglvl=logging.ERROR)
-
-
-        return stage_result
-
-
     def check_do_update(self):
         """ Checks if the server should update itself\n
             This is done by checking `version.ini` on the standalone path on capoom_storage"""
