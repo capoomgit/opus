@@ -162,60 +162,70 @@ class CapoomServer():
         
 
 
-    def get_sock_uuid(self, sock):
+    def get_sock_uuid(self, sock : socket.socket) -> uuid.UUID:
+        """ Get the UUID of a socket\n"""
         for key, value in self.all_socks_uuid.items():
             if value == sock:
                 return key
 
-    def get_sock_from_uuid(self, uuid):
+    def get_sock_from_uuid(self, uuid : uuid.UUID) -> socket.socket:
         for key, value in self.all_socks_uuid.items():
             if key == uuid:
                 return value
 
-    def get_assigned_CapoomWork_by_sockUUID(self, sockUUID):
+    def assigned_work_from_socket(self, sockUUID : uuid.UUID) -> CapoomWork:
+        """ Gets the CapoomWork object\n
+            `sockUUID` the UUID of the socket"""
+
         for assigned in self.assigned:
             if assigned.sock_uuid == sockUUID:
                 return assigned
 
-    def get_assigned_CapoomWork_by_cmduuid_workid(self, cmduuid, workid):
+    def assigned_work_from_cmd(self, cmduuid : uuid.UUID, workid : int) -> CapoomWork:
+        """ Gets the CapoomWork object\n
+            `cmduuid` the UUID of the command\n
+            `workid` the work id"""
         for assigned in self.assigned:
             if assigned.cmd_uuid == cmduuid and assigned.work_id == workid:
                 return assigned
                 
     #Remove disconnected sockets 
     def remove_sock(self,s,message):
+        """ Remove a socket from the list of connections\n
+            `s` the socket\n
+            `message` the message to log
+        """
+        disconnected_address = s.getpeername()
+        disconnected_rank = self.all_ranks[self.get_sock_uuid(s)]
+        self.all_connections.remove(s)
 
-            disconnected_address = s.getpeername()
-            disconnected_rank = self.all_ranks[self.get_sock_uuid(s)]
-            self.all_connections.remove(s)
+        s_uuid = self.get_sock_uuid(s)
 
-            s_uuid = self.get_sock_uuid(s)
+        if s_uuid in self.all_socks_uuid:
+            logger.debug(f"Removing {disconnected_address} from all_socks_uuid")
+            self.all_socks_uuid.pop(s_uuid)
+        if s_uuid in self.all_stats:
+            logger.debug(f"Removing {disconnected_address} from all_stats")
+            self.all_stats.pop(s_uuid)
+        if s_uuid in self.all_ranks:
+            logger.debug(f"Removing {disconnected_address} from all_ranks")
+            self.all_ranks.pop(s_uuid)
+        if self.get_assigned_work(s_uuid):
+            logger.debug(f"Removing {disconnected_address} work from assigned")
+            self.assigned.remove(self.get_assigned_work(s_uuid))
 
-            if s_uuid in self.all_socks_uuid:
-                logger.debug(f"Removing {disconnected_address} from all_socks_uuid")
-                self.all_socks_uuid.pop(s_uuid)
-            if s_uuid in self.all_stats:
-                logger.debug(f"Removing {disconnected_address} from all_stats")
-                self.all_stats.pop(s_uuid)
-            if s_uuid in self.all_ranks:
-                logger.debug(f"Removing {disconnected_address} from all_ranks")
-                self.all_ranks.pop(s_uuid)
-            if self.get_assigned_CapoomWork_by_sockUUID(s_uuid):
-                logger.debug(f"Removing {disconnected_address} work from assigned")
-                self.assigned.remove(self.get_assigned_CapoomWork_by_sockUUID(s_uuid))
-
-            self.send_cl_to_admins()
+        self.send_cl_to_admins()
 
 
-            s.close()
-            logger.warning(f'disconnected ip:{disconnected_address[0]} rank: {disconnected_rank} reason: {message}')
+        s.close()
+        logger.warning(f'disconnected ip:{disconnected_address[0]} rank: {disconnected_rank} reason: {message}')
 
     #Save and get assigned jobs and their machine ips as pickle
-    def saveAssignedCommands(data):
+    def save_assigned_commands(data):
         with open('assigned', 'wb') as handle:
             pickle.dump(data, handle)
     
-    def loadAssignedCommands():
+    def load_assigned_commands():
         with open('assigned', 'rb') as handle:
             loaded = pickle.load(handle)
             return loaded
@@ -231,6 +241,7 @@ class CapoomServer():
                     return sock
 
     def send_cl_to_admins(self):
+        """ Send the list of clients to admin sockets\n"""
         for conn in self.all_connections:
             try:
                 sock_uuid = self.get_sock_uuid(conn)
@@ -244,7 +255,7 @@ class CapoomServer():
                 pass
 
     def clear_cmds(self):
-        
+        """ Clear all commands from the queue\n"""
         for command in self.commands.copy():
             
             self.rem_cmds(command, JobStatus.CANCELLED.value)
@@ -255,7 +266,9 @@ class CapoomServer():
         self.assigned = []
 
     def rem_cmds(self, command, reason):
-
+        """ Remove a command from the queue\n
+            `command` the command to remove\n
+            `reason` the reason for removing the command"""
         try:
             try:
                 self.db_cur.execute(GET_JOB, (command.uuid,))
@@ -279,6 +292,7 @@ class CapoomServer():
 
 
     def send_cmds_to_db(self):
+        """ Saves/updates commands in the database\n"""
         # return
         if self.commands:
             # try:
@@ -348,8 +362,9 @@ class CapoomServer():
             
        
 
-    def read_cmds(self, unpickled):
-
+    def read_cmds(self, unpickled : CapoomCommand):
+        """ This function handles the commands sent by admins, it will add them to the queue\n
+            `unpickled` the unpickled command\n"""
         unpickled.init_remaining()
 
         skip = unpickled.data["skip"]
@@ -413,7 +428,7 @@ class CapoomServer():
                 cmd.sockets.append(conn)
                 logger.info(f"Added new sock to command {cmd.type} {cmd.data['projectid']} {cmd.version} {cmd.count}")
 
-    def rm_assigned_CapoomWork_by_cmd_id_and_work_id(self, cmd_uuid, work_id):
+    def rm_assigned_work(self, cmd_uuid, work_id):
         for work in self.assigned:
             if work.cmd_uuid == cmd_uuid and work.work_id == work_id:
                 self.assigned.remove(work)
@@ -481,12 +496,12 @@ class CapoomServer():
             cmd_uuid = unpickled.data["uuid"]
     
             # TODO use the CapoomWork class for Works and get rid of (cmd_uuid, workid) tuples
-            if self.get_assigned_CapoomWork_by_cmduuid_workid(cmd_uuid, workid) is not None:
+            if self.assigned_work_from_cmd(cmd_uuid, workid) is not None:
 
                 
                 # Remove from assigned
                 # self.assigned = {k: v for k, v in self.assigned.items() if v != (cmd_uuid, workid)}
-                self.rm_assigned_CapoomWork_by_cmd_id_and_work_id(cmd_uuid, workid)
+                self.rm_assigned_work(cmd_uuid, workid)
                 
                 if self.get_cmd_by_uuid(cmd_uuid) is None:
                     logger.warning(f"Command with uuid {cmd_uuid} not found")
@@ -586,7 +601,7 @@ class CapoomServer():
                         if target_cmd in self.commands:
         
                             for workid in cmd.remaining:
-                                if self.get_assigned_CapoomWork_by_cmduuid_workid(cmd.uuid, workid) not in self.assigned and workid not in target_cmd.remaining:
+                                if self.assigned_work_from_cmd(cmd.uuid, workid) not in self.assigned and workid not in target_cmd.remaining:
                                     workid_to_assign = workid
                                     break
 
@@ -600,7 +615,7 @@ class CapoomServer():
                 
                 else:
                     for workid in cmd.remaining:
-                        if self.get_assigned_CapoomWork_by_cmduuid_workid(cmd.uuid, workid) not in self.assigned:
+                        if self.assigned_work_from_cmd(cmd.uuid, workid) not in self.assigned:
                             workid_to_assign = workid
                             break
                     
@@ -768,7 +783,7 @@ class CapoomServer():
                     logger.warning(f"Workid {work.work_id} of {work.cmd_uuid} timed out")
 
                     self.assigned.remove(work)
-                    
+
                     cmd = self.get_cmd_by_uuid(work.cmd_uuid)
                     cmd.data["workids_tries"][work.work_id] += 1
 
