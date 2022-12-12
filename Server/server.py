@@ -5,19 +5,19 @@ import logging
 import os
 import pickle
 import socket
+import subprocess
 import sys
 import threading
 import time
 import uuid
-import subprocess
+
+import google_chat
 import psycopg2
 import psycopg2.extras
 from consts import ClientRanks, ClientStatus, JobStatus
-from server_utils import CapoomCommand, CapoomResponse, CapoomWork
-from logger import setup_logger
-import google_chat
 from get_credentials import get_credentials
-
+from logger import setup_logger
+from server_utils import CapoomCommand, CapoomResponse, CapoomWork
 
 logger = setup_logger("server.log")
 
@@ -231,8 +231,11 @@ class CapoomServer():
             return loaded
             
     #Get socket from ip
-    def get_sock_from_ip(self, ip):
-        
+    def get_sock_from_ip(self, ip : str) -> socket.socket:
+        """ Get the socket from an ip\n
+            `ip` the ip address\n
+            `return` the socket"""
+
         for sock in self.all_connections:
             sock_uuid = self.get_sock_uuid(sock)
 
