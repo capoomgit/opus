@@ -794,6 +794,9 @@ if __name__ == "__main__":
 
         db_backup = threading.Thread(None, server.backup_db, "DBBackup")
         db_backup.start()
+
+        work_timeout = threading.Thread(None, server.chk_work_timeout, "WorkTimeout")
+        work_timeout.start()
         
         
 
