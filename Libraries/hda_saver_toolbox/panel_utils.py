@@ -308,6 +308,9 @@ def add_quick_material():
             #move the material node to good position
             material_node.moveToGoodPosition(move_outputs=False,move_inputs=False, relative_to_inputs=True)
 
+            #set mikkt off
+            material_node.parm("usemikkt").set(False)
+
             #is the texture folder path is not empty
             quick_material_parms = ["principledshader_basecolor_texture_1", 
                                     "principledshader_opaccolor_texture_1", 
