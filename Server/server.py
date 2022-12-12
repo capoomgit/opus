@@ -72,8 +72,8 @@ class CapoomServer():
 
 
         # TODO implement this
-        self.commandTimeout = 10 # In minutes
-        self.commandTimeout = self.commandTimeout * 60 # Converted to seconds
+        self.work_timeout = 10 # In minutes
+        self.work_timeout = self.work_timeout * 60 # Converted to seconds
 
 
         try:
@@ -760,7 +760,19 @@ class CapoomServer():
                         sys.excepthook(*sys.exc_info())
                         pass
 
+    def chk_work_timeout(self):
+        while True:
+            for work in self.assigned:
+                run_time = work.get_running_time()
+                if run_time > self.work_timeout:
+                    logger.warning(f"Workid {work.work_id} of {work.cmd_uuid} timed out")
 
+                    self.assigned.remove(work)
+                    
+                    cmd = self.get_cmd_by_uuid(work.cmd_uuid)
+                    cmd.data["workids_tries"][work.work_id] += 1
+
+            time.sleep(5)
 
 
 if __name__ == "__main__":
