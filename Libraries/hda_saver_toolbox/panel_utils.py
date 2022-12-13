@@ -322,7 +322,7 @@ def add_quick_material():
             for parm in quick_material_parms:
                 
 
-                texture_name = name + "_" + material_notations[quick_material_parms.index(parm)] + ".png"
+                texture_name = name + "_" + material_notations[quick_material_parms.index(parm)] + ".jpg"
                 texture_full_path = os.path.join(texture_folder, texture_name)
 
                 if os.path.exists(texture_full_path):
