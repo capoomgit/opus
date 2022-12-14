@@ -184,7 +184,6 @@ class JobView(QVBoxLayout):
                     jobs["ver"].append(self.tree_model.item(index.row(), 2).text())
 
 
-
         tabular_job = tabulate(jobs, headers="keys", tablefmt="github")
 
         jobinfo = f"```{tabular_job}```"
@@ -237,6 +236,7 @@ class JobView(QVBoxLayout):
             self.tree_model.removeRow(row)
 
         return
+    
     def right_click_menu(self, position):
         menu = QMenu()
         menu.addAction("Copy Job UUID", self.copy_selected_job_uuid)

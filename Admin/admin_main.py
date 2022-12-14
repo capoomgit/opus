@@ -36,6 +36,15 @@ GET_JOB = """SELECT * FROM "Jobs" WHERE job_uuid = %s"""
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
+# -*- coding: utf-8 -*-
+
+################################################################################
+## Form generated from reading UI file 'adminclientbhKCJs.ui'
+##
+## Created by: Qt User Interface Compiler version 6.3.2
+##
+## WARNING! All changes made in this file will be lost when recompiling UI file!
+################################################################################
 
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
@@ -220,6 +229,21 @@ class Ui_MainWindow(object):
         self.checkbox_startingstatus_cache.setChecked(True)
 
         self.verticalLayout_4.addWidget(self.checkbox_startingstatus_cache)
+
+        self.horizontalLayout_9 = QHBoxLayout()
+        self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
+        self.label_template = QLabel(self.verticalLayoutWidget_3)
+        self.label_template.setObjectName(u"label_template")
+
+        self.horizontalLayout_9.addWidget(self.label_template)
+
+        self.input_template = QComboBox(self.verticalLayoutWidget_3)
+        self.input_template.setObjectName(u"input_template")
+
+        self.horizontalLayout_9.addWidget(self.input_template)
+
+
+        self.verticalLayout_4.addLayout(self.horizontalLayout_9)
 
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
@@ -537,7 +561,7 @@ class Ui_MainWindow(object):
         self.pushButton_2.setGeometry(QRect(930, 590, 91, 21))
         self.horizontalLayoutWidget_3 = QWidget(self.hda_params)
         self.horizontalLayoutWidget_3.setObjectName(u"horizontalLayoutWidget_3")
-        self.horizontalLayoutWidget_3.setGeometry(QRect(10, 30, 311, 581))
+        self.horizontalLayoutWidget_3.setGeometry(QRect(10, 110, 311, 501))
         self.componentsLayout = QHBoxLayout(self.horizontalLayoutWidget_3)
         self.componentsLayout.setObjectName(u"componentsLayout")
         self.componentsLayout.setContentsMargins(0, 0, 0, 0)
@@ -557,9 +581,34 @@ class Ui_MainWindow(object):
         self.label_15.setAlignment(Qt.AlignCenter)
         self.line_2 = QFrame(self.hda_params)
         self.line_2.setObjectName(u"line_2")
-        self.line_2.setGeometry(QRect(323, 30, 41, 581))
+        self.line_2.setGeometry(QRect(330, 30, 20, 581))
         self.line_2.setFrameShape(QFrame.VLine)
         self.line_2.setFrameShadow(QFrame.Sunken)
+        self.horizontalLayoutWidget_6 = QWidget(self.hda_params)
+        self.horizontalLayoutWidget_6.setObjectName(u"horizontalLayoutWidget_6")
+        self.horizontalLayoutWidget_6.setGeometry(QRect(10, 40, 311, 26))
+        self.horizontalLayout_4 = QHBoxLayout(self.horizontalLayoutWidget_6)
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.horizontalLayout_4.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout_10 = QHBoxLayout()
+        self.horizontalLayout_10.setObjectName(u"horizontalLayout_10")
+        self.label_structure_2 = QLabel(self.horizontalLayoutWidget_6)
+        self.label_structure_2.setObjectName(u"label_structure_2")
+
+        self.horizontalLayout_10.addWidget(self.label_structure_2)
+
+        self.input_structure_2 = QComboBox(self.horizontalLayoutWidget_6)
+        self.input_structure_2.setObjectName(u"input_structure_2")
+
+        self.horizontalLayout_10.addWidget(self.input_structure_2)
+
+
+        self.horizontalLayout_4.addLayout(self.horizontalLayout_10)
+
+        self.input_hda_search = QLineEdit(self.hda_params)
+        self.input_hda_search.setObjectName(u"input_hda_search")
+        self.input_hda_search.setGeometry(QRect(10, 80, 311, 21))
+        self.input_hda_search.setAlignment(Qt.AlignCenter)
         self.tabWidget.addTab(self.hda_params, "")
         self.logs = QWidget()
         self.logs.setObjectName(u"logs")
@@ -678,6 +727,7 @@ class Ui_MainWindow(object):
         self.button_createhouse.setText(QCoreApplication.translate("MainWindow", u"Cache Houses", None))
         self.button_render.setText(QCoreApplication.translate("MainWindow", u"Render Caches", None))
         self.checkbox_startingstatus_cache.setText(QCoreApplication.translate("MainWindow", u"Immidiately start the job", None))
+        self.label_template.setText(QCoreApplication.translate("MainWindow", u"Template", None))
         self.label_structure.setText(QCoreApplication.translate("MainWindow", u"Structure", None))
         self.label_8.setText(QCoreApplication.translate("MainWindow", u"Render Settings", None))
         self.label_9.setText(QCoreApplication.translate("MainWindow", u"Project Id: ", None))
@@ -722,6 +772,8 @@ class Ui_MainWindow(object):
         self.pushButton_2.setText(QCoreApplication.translate("MainWindow", u"Save Template", None))
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"Components and HDA's", None))
         self.label_15.setText(QCoreApplication.translate("MainWindow", u"Parameter Randomization Interface", None))
+        self.label_structure_2.setText(QCoreApplication.translate("MainWindow", u"Structure", None))
+        self.input_hda_search.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Search for Component or HDA", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.hda_params), QCoreApplication.translate("MainWindow", u"HDA setup", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.logs), QCoreApplication.translate("MainWindow", u"Logs", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"Clients", None))
@@ -809,6 +861,9 @@ class Ui_MainWindow(object):
         self.button_settings.triggered.connect(self.open_settings)
         self.button_updateclients.triggered.connect(self.update_clients)
 
+        self.input_structure_2.currentTextChanged.connect(self.components.init_model)
+        self.input_hda_search.textChanged.connect(self.components.search)
+
         # Make these inputs only accept numbers
         self.input_projectid.setValidator(QIntValidator())
         self.input_frame.setValidator(QIntValidator())
@@ -827,7 +882,6 @@ class Ui_MainWindow(object):
         self.db_cur = self.db_conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     def init_settings(self):
-        # make a new app
         self.settingswidget = QDialog()
 
         self.settingsui=Ui_dialog_settings()
@@ -864,14 +918,20 @@ class Ui_MainWindow(object):
         self.adminthread = threading.Thread(target=self.admin.run)
         self.adminthread.start()
         self.jobsview.refresh()
+        
+        # TODO hide the columns after setting model
         self.jobsview.refresh()
 
     def init_structure_list(self):
         self.input_structure.clear()
+        self.input_structure_2.clear()
+
         self.db_cur.execute("""SELECT structure_name FROM "Structures" """)
         structures = self.db_cur.fetchall()
+
         for structure in structures:
             self.input_structure.addItem(structure[0])
+            self.input_structure_2.addItem(structure[0])
 
 
     def cl_list_selection_behaviour(self):

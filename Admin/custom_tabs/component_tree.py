@@ -25,12 +25,18 @@ class ComponentView(QVBoxLayout):
         self.tree_view.setModel(self.tree_model)
         self.addWidget(self.tree_view)
 
-        self.init_model()
-        self.tree_view.clicked.connect(self.update_model)
+        # self.init_model()
+        # self.tree_view.clicked.connect(self.update_model)
+
 
     def init_model(self):
-        # Get the jobs
-        self.db_cur.execute("""SELECT * FROM "Objects" """)
+        # clear the model
+        self.tree_model.clear()
+
+        struct_name = self.main.input_structure_2.currentText()
+        self.db_cur.execute("""SELECT * FROM "Structures" WHERE structure_name = %s""", (struct_name,))
+        object_ids = self.db_cur.fetchone()["obj_ids"]
+        self.db_cur.execute("""SELECT * FROM "Objects" WHERE obj_id IN %s""", (tuple(object_ids),))
         objects = self.db_cur.fetchall()
 
         for i, object in enumerate(objects):
@@ -72,7 +78,40 @@ class ComponentView(QVBoxLayout):
 
         self.tree_view.setModel(self.tree_model)
 
-    def update_model(self, index):
-        # TODO update the parameter interface
-        print(index.row())
-        pass
+    # Delete all objects and children of those objects if any child doesn't containts the given string and highlight the text
+    def search(self):
+        text = self.main.input_hda_search.text()
+        self.init_model()
+
+
+        to_remove = []
+        for i in range(self.tree_model.rowCount()):
+            parent_object = self.tree_model.item(i, 0)
+
+            # Object contains the text
+            if text.lower() in parent_object.text().lower():
+                continue
+
+            for j in range(parent_object.rowCount()):
+                parent_component = parent_object.child(j, 0)
+
+                # Component contains the text
+                if text.lower() in parent_component.text().lower():
+                    break
+
+                for k in range(parent_component.rowCount()):
+                    parent_hda = parent_component.child(k, 0)
+
+                    # HDA contains the text
+                    if text.lower() in parent_hda.text().lower():
+                        break
+            to_remove.append(i)
+
+        # Ew but it works
+        for i, to_remove in enumerate(to_remove):
+            print(self.tree_model.item(to_remove - i, 0).text())
+            self.tree_model.removeRows(to_remove - i, 1)
+
+
+
+
