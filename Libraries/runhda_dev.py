@@ -73,7 +73,7 @@ def create_structure(structname, project_id, work_id, version):
 
 # TODO handle the save path errors that raises when we dont have a parent structure
 
-def create_object(obj_id, project_id, work_id, version, parent_structure="Standalone", style=None, id=0):
+def create_object(obj_id, project_id, work_id, version, parent_structure="Standalone", style=None, id=0, prediction_parms={}):
     try:
         cur.execute(GET_OBJECT_BY_ID, (obj_id,))
         obj = cur.fetchone()
@@ -99,15 +99,18 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
             cur.execute(GET_COMPS_BY_ID, (layer_id,))
             layer = cur.fetchone()
 
+            # TODO move this into "HDA Template"
             layer_can_skip = layer["can_skip"]
             layer_skip_chance = layer["skip_chance"]
 
-            layer_skip_random = random.random()
-            if layer_can_skip and layer_skip_chance > layer_skip_random:
-                # We skipped this layer
-                continue
+            # If the input is coming from ai we need to place each layer because we dont know which one will be used
+            if not prediction_parms:
+                layer_skip_random = random.random()
+                if layer_can_skip and layer_skip_chance > layer_skip_random:
+                    continue
             
-            # Create the layer
+            # TODO It is unclear if the hda is classified by AI, discuss it further
+            # If it is classified, you just need to get the predicted path instead of randomly choosing one
             paths = []
             for path_id in layer["path_ids"]:
                 cur.execute(GET_PATHS_BY_ID, (path_id,))
@@ -118,9 +121,6 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
             sel_path = random.choice(paths)
             print("sel_path", sel_path)
 
-            # if sel_path is None:
-            #     print("sel_path is None")
-            #     continue
 
             for j, hda_id in enumerate(sel_path["hda_ids"]):
                 cur.execute(GET_HDA_BY_ID, (hda_id,))
@@ -164,10 +164,6 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
                 # Connect our previous layer's last hda to our layer's first hda
                 if i != 0 and j == 0:
                     hda.setInput(0, previous_layer_last_hda, 0)
-                    # try:
-                        # print("Setting input of", hda.name(), "to", previous_layer_last_hda.name())
-                    # except Exception as e:
-                    #     print(e)
                 if j == len(sel_path["hda_ids"]) - 1:
                     previous_layer_last_hda = hda
 
@@ -180,13 +176,6 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
                 # We need to get the required window, door etc. data from wall
                 check_get_styles(obj, hda)
 
-                        # except Exception as e:
-                        #     print(e)
-                        #     pass
-
-                    # TODO implement this
-                    # hda.geometry().attribValue('doorStyles')
-                    # hda.geometry().attribValue('doorPanels')
                 last_layer_last_hda = hda
         if style is not None:
             attrs = obj["obj_name"].lower() + "Style " + obj["obj_name"].lower() + "Panel"
@@ -212,6 +201,7 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
 
         hou.hipFile.save(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=obj["obj_name"], project_id=project_id, work_id=work_id, Out=out, id=id) + ".hiplc"))
 
+        # TODO maybe add hda name as prefix so there are no overlaps in hda names
         with open(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=obj["obj_name"], project_id=project_id, work_id=work_id, Out=out, id=id) + ".json"), "w") as f:
             json.dump(obj_parms, f, indent=4)
         return True
@@ -233,10 +223,11 @@ def cast_parm(val, parmtype : str):
 
 
 def place_hda(db_hda, hougeo):
-    # FROM DB
+    """ Places the hda in the scene """
     hda_name = db_hda["hda_name"]
     hda_ver = db_hda["hda_version"]
 
+    # TODO seperation of branches
     hda_path = None
     if hda_ver:
         hda_path = f"capoom::dev::{hda_name}::{hda_ver}"
@@ -246,11 +237,11 @@ def place_hda(db_hda, hougeo):
     hda = hougeo.createNode(hda_path)
     return hda
 
-def set_hda_parms(hda, db_hda, seed, obj_name=None, style=None):
-    # FROM DB
+def set_hda_parms(hda, db_hda, seed, obj_name=None, style=None, prediction={}):
+
+    # TODO Check if we really need this. we shouldn't
     if db_hda["hda_name"] == "Null":
         return
-    
     if db_hda["hda_name"] != "StyleCatcher":
         all_parms = db_hda["parm_names"]
         parms_override_mode = db_hda["parm_override_mode"]
@@ -260,41 +251,56 @@ def set_hda_parms(hda, db_hda, seed, obj_name=None, style=None):
         defaults = db_hda["parm_defaults"]
 
 
+
+
         for parmi, parm in enumerate(all_parms):
-            seed += 1445
-            # This generates a random value for the parm
-            if parms_override_mode[parmi] == 1:
-                try:
-                    detparmmin = hda.geometry().findGlobalAttrib(parm+"_min")
-                    if detparmmin:
-                        parmmins[parmi] = hda.geometry().attribValue(parm+"_min")
-                    
-                    if hda.geometry().findGlobalAttrib(parm+"_max") is not None:
-                        parmmaxes[parmi] = hda.geometry().attribValue(parm+"_max")
-                except AttributeError as e:
-                    print("Detail attribute couldn't found geometry")
-                    pass
-            
-                random.seed(seed)
-                actualmin = cast_parm(parmmins[parmi], parmtypes[parmi])
-                actualmax = cast_parm(parmmaxes[parmi], parmtypes[parmi])
-                actualval = cast_parm(random.uniform(actualmin, actualmax), parmtypes[parmi])
-                try:
-                    hda.parm(parm).set(actualval)
-                    obj_parms[str(db_hda["hda_name"])][parm] = actualval
-                
-                except AttributeError:
-                    print("Attribute couldn't be set:", parm, "of", hda.name())
-                
-
-            # We need to override to defaults
+            if prediction:
+                if parm in prediction.keys():
+                    hda.parm(parm).set(prediction[parm])
+                    continue
             else:
-                hda.parm(parm).set(cast_parm(defaults[parmi], parmtypes[parmi]))
+                seed += 1445
+                # This generates a random value for the parm
+                if parms_override_mode[parmi] == 1:
+                    # Try overriding the minimum value
+                    try:
+                        if hda.geometry().findGlobalAttrib(parm+"_min"):
+                            parmmins[parmi] = hda.geometry().attribValue(parm+"_min")
 
-            # This is already implemented in the hda! 
-            # if parm == "window_width":
-            #     hda.parm(parm).set(style[1])
+                    except AttributeError as e:
+                        print("There are no min attributes in the geometry")
+
+                    # Try overrideng the maximum value
+
+                    try:
+                        if hda.geometry().findGlobalAttrib(parm+"_max") is not None:
+                            parmmaxes[parmi] = hda.geometry().attribValue(parm+"_max")
+                    except AttributeError as e:
+                        print("There are no max attributes in the geometry")
+
+
+                    random.seed(seed)
+                    overriden_min = cast_parm(parmmins[parmi], parmtypes[parmi])
+                    overriden_max = cast_parm(parmmaxes[parmi], parmtypes[parmi])
+                    overriden_val_rnd = cast_parm(random.uniform(overriden_min, overriden_max), parmtypes[parmi])
+                    try:
+                        hda.parm(parm).set(overriden_val_rnd)
+                        obj_parms[str(db_hda["hda_name"])][parm] = overriden_val_rnd
+
+                    except AttributeError:
+                        print("Attribute couldn't be set:", parm, "of", hda.name())
+                # We need to override to defaults
+                else:
+                    hda.parm(parm).set(cast_parm(defaults[parmi], parmtypes[parmi]))
+
+                # Check if any of the values got overriden inside the hda
+                try:
+                    if hda.geometry().findGlobalAttrib(parm+"_actual") is not None:
+                        obj_parms[str(db_hda["hda_name"])][parm] = hda.geometry().attribValue(parm+"_actual")
+                except AttributeError as e:
+                    pass
     else:
+        # HARDCODED case for stylecatcher parameters
         hda.parm("object_name").set(obj_name.lower())
         hda.parm("style").set(style[0])
         hda.parm("panel").set(style[1])
@@ -321,7 +327,6 @@ def check_get_styles(obj, hda):
 
 
                 all_styles[multiple["obj_name"]] = temp
-    # print("All styles", all_styles)
 
 def create_placer(project_id, work_id, version, parent_structure, object_name, file_count):
     hou.hipFile.clear(suppress_save_prompt=1)

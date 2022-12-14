@@ -7,6 +7,7 @@ import os
 def render_smth(usd_path, save_path, project_id, work_id, version, frame_count):
     omni_render_out = f"{save_path}/Render_{project_id}_{work_id}_{version}/"
     res = os.system(f'C:/Users/capoom/AppData/Local/ov/pkg/isaac_sim-2022.1.1/python.bat P:/pipeline/standalone_dev/libs/omni_render.py {str(frame_count)} {usd_path} {omni_render_out}')
+    print("Omniverse exit code: ", res)
     return True if res == 0 else False
 
 """

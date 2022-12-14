@@ -14,6 +14,7 @@ from omnisettings import Ui_omniSettings
 from consts import JobStatus, ClientStatus
 from get_credentials import get_credentials
 from custom_tabs.jobs_tab import JobView
+from custom_tabs.component_tree import ComponentView
 
 from PySide6.QtCore import (QEvent)
 
@@ -35,6 +36,7 @@ GET_JOB = """SELECT * FROM "Jobs" WHERE job_uuid = %s"""
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
+
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
     QSize, QTime, QUrl, Qt)
@@ -501,15 +503,70 @@ class Ui_MainWindow(object):
         self.jobsLayout.setSizeConstraint(QLayout.SetFixedSize)
         self.jobsLayout.setContentsMargins(0, 0, 0, 0)
         self.tabWidget.addTab(self.jobs, "")
+        self.hda_params = QWidget()
+        self.hda_params.setObjectName(u"hda_params")
+        self.verticalLayoutWidget_7 = QWidget(self.hda_params)
+        self.verticalLayoutWidget_7.setObjectName(u"verticalLayoutWidget_7")
+        self.verticalLayoutWidget_7.setGeometry(QRect(360, 540, 160, 71))
+        self.verticalLayout_6 = QVBoxLayout(self.verticalLayoutWidget_7)
+        self.verticalLayout_6.setObjectName(u"verticalLayout_6")
+        self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
+        self.saved_templates = QLabel(self.verticalLayoutWidget_7)
+        self.saved_templates.setObjectName(u"saved_templates")
+        sizePolicy2 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.saved_templates.sizePolicy().hasHeightForWidth())
+        self.saved_templates.setSizePolicy(sizePolicy2)
+        self.saved_templates.setAlignment(Qt.AlignCenter)
+
+        self.verticalLayout_6.addWidget(self.saved_templates)
+
+        self.comboBox = QComboBox(self.verticalLayoutWidget_7)
+        self.comboBox.setObjectName(u"comboBox")
+
+        self.verticalLayout_6.addWidget(self.comboBox)
+
+        self.pushButton = QPushButton(self.verticalLayoutWidget_7)
+        self.pushButton.setObjectName(u"pushButton")
+
+        self.verticalLayout_6.addWidget(self.pushButton)
+
+        self.pushButton_2 = QPushButton(self.hda_params)
+        self.pushButton_2.setObjectName(u"pushButton_2")
+        self.pushButton_2.setGeometry(QRect(930, 590, 91, 21))
+        self.horizontalLayoutWidget_3 = QWidget(self.hda_params)
+        self.horizontalLayoutWidget_3.setObjectName(u"horizontalLayoutWidget_3")
+        self.horizontalLayoutWidget_3.setGeometry(QRect(10, 30, 311, 581))
+        self.componentsLayout = QHBoxLayout(self.horizontalLayoutWidget_3)
+        self.componentsLayout.setObjectName(u"componentsLayout")
+        self.componentsLayout.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayoutWidget_4 = QWidget(self.hda_params)
+        self.horizontalLayoutWidget_4.setObjectName(u"horizontalLayoutWidget_4")
+        self.horizontalLayoutWidget_4.setGeometry(QRect(360, 30, 661, 501))
+        self.parmLayout = QHBoxLayout(self.horizontalLayoutWidget_4)
+        self.parmLayout.setObjectName(u"parmLayout")
+        self.parmLayout.setContentsMargins(0, 0, 0, 0)
+        self.label_4 = QLabel(self.hda_params)
+        self.label_4.setObjectName(u"label_4")
+        self.label_4.setGeometry(QRect(10, 10, 311, 20))
+        self.label_4.setAlignment(Qt.AlignCenter)
+        self.label_15 = QLabel(self.hda_params)
+        self.label_15.setObjectName(u"label_15")
+        self.label_15.setGeometry(QRect(360, 10, 661, 20))
+        self.label_15.setAlignment(Qt.AlignCenter)
+        self.line_2 = QFrame(self.hda_params)
+        self.line_2.setObjectName(u"line_2")
+        self.line_2.setGeometry(QRect(323, 30, 41, 581))
+        self.line_2.setFrameShape(QFrame.VLine)
+        self.line_2.setFrameShadow(QFrame.Sunken)
+        self.tabWidget.addTab(self.hda_params, "")
         self.logs = QWidget()
         self.logs.setObjectName(u"logs")
         self.listView_logs = QListView(self.logs)
         self.listView_logs.setObjectName(u"listView_logs")
         self.listView_logs.setGeometry(QRect(10, 10, 1021, 601))
         self.tabWidget.addTab(self.logs, "")
-        self.hda_params = QWidget()
-        self.hda_params.setObjectName(u"hda_params")
-        self.tabWidget.addTab(self.hda_params, "")
 
         self.verticalLayout.addWidget(self.tabWidget)
 
@@ -522,11 +579,11 @@ class Ui_MainWindow(object):
         self.label = QLabel(self.verticalLayoutWidget_2)
         self.label.setObjectName(u"label")
         self.label.setEnabled(True)
-        sizePolicy2 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
-        sizePolicy2.setHorizontalStretch(0)
-        sizePolicy2.setVerticalStretch(0)
-        sizePolicy2.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
-        self.label.setSizePolicy(sizePolicy2)
+        sizePolicy3 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
+        self.label.setSizePolicy(sizePolicy3)
         self.label.setMinimumSize(QSize(0, 16))
         self.label.setAlignment(Qt.AlignHCenter|Qt.AlignTop)
         self.label.setWordWrap(True)
@@ -598,7 +655,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(2)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -660,8 +717,13 @@ class Ui_MainWindow(object):
         self.button_refreshjobs.setText(QCoreApplication.translate("MainWindow", u"Refresh Jobslist", None))
         self.button_clearhistory.setText(QCoreApplication.translate("MainWindow", u"Clear History", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.jobs), QCoreApplication.translate("MainWindow", u"Jobs", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.logs), QCoreApplication.translate("MainWindow", u"Logs", None))
+        self.saved_templates.setText(QCoreApplication.translate("MainWindow", u"Saved Templates", None))
+        self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Load Template", None))
+        self.pushButton_2.setText(QCoreApplication.translate("MainWindow", u"Save Template", None))
+        self.label_4.setText(QCoreApplication.translate("MainWindow", u"Components and HDA's", None))
+        self.label_15.setText(QCoreApplication.translate("MainWindow", u"Parameter Randomization Interface", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.hda_params), QCoreApplication.translate("MainWindow", u"HDA setup", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.logs), QCoreApplication.translate("MainWindow", u"Logs", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"Clients", None))
         self.button_select_avails.setText(QCoreApplication.translate("MainWindow", u"Sel. Availables", None))
         self.button_select_all.setText(QCoreApplication.translate("MainWindow", u"Force All", None))
@@ -698,6 +760,7 @@ class Ui_MainWindow(object):
         self.init_settings()
         self.init_omni_settings()
         self.init_jobs()
+        self.init_components()
         self.init_button_actions()
         self.init_client_list_view()
         self.init_structure_list()
@@ -785,6 +848,11 @@ class Ui_MainWindow(object):
         self.jobsLayout.addLayout(self.jobsview)
         self.jobsLayout.addLayout(self.horizontalLayout_12)
 
+    def init_components(self):
+        self.components = ComponentView(self.db_conn, self.db_cur, self)
+
+        self.componentsLayout.addLayout(self.components)
+        self.componentsLayout.addLayout(self.horizontalLayout_12)
 
     def init_client_list_view(self):
         self.list_clients.setSelectionMode(QAbstractItemView.ExtendedSelection)
