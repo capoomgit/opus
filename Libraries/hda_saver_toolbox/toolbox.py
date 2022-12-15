@@ -52,8 +52,14 @@ def create_toolbox():
     add_quick_material = create_button("Add Quick Material", panel_utils.add_quick_material)
     utils_layout.addWidget(add_quick_material)
 
+    switch_quick_material_resolutions = create_button("Switch Quick Material Resolutions", panel_utils.switch_quick_material_resulotions)
+    utils_layout.addWidget(switch_quick_material_resolutions)
+
     show_node_name = create_button("Show Node Name", panel_utils.show_node_name)
     utils_layout.addWidget(show_node_name)
+
+    show_node_type = create_button("Show Node Type", panel_utils.show_node_type)
+    utils_layout.addWidget(show_node_type)
 
     show_node_parms = create_button("Show Node Parms", panel_utils.show_node_parms)
     utils_layout.addWidget(show_node_parms)
