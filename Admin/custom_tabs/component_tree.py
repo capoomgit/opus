@@ -26,12 +26,17 @@ class ComponentView(QVBoxLayout):
 
         self.tree_view.setRootIsDecorated(True)
         self.tree_view.setHeaderHidden(True)
+
         self.tree_view.setModel(self.tree_model)
-        self.tree_view.hideColumn(1)
-        self.tree_view.hideColumn(2)
+
+        self.tree_view.setColumnHidden(1, True)
+        self.tree_view.setColumnHidden(2, True)
+
+        print(self.tree_view.isColumnHidden(1))
+        print(self.tree_view.isColumnHidden(2))
+
 
         self.addWidget(self.tree_view)
-
         # self.init_model()
         self.tree_view.clicked.connect(self.update_parm_settings)
 
@@ -39,6 +44,9 @@ class ComponentView(QVBoxLayout):
     def init_model(self):
         # clear the model
         self.tree_model.clear()
+
+        self.tree_view.setColumnHidden(1, True)
+        self.tree_view.setColumnHidden(2, True)
 
         struct_name = self.main.input_structure_2.currentText()
         self.db_cur.execute("""SELECT * FROM "Structures" WHERE structure_name = %s""", (struct_name,))
@@ -84,6 +92,9 @@ class ComponentView(QVBoxLayout):
                                                     StandardItem("Hdas", align=Qt.AlignLeft)])
 
         self.tree_view.setModel(self.tree_model)
+
+        self.tree_view.setColumnHidden(1, True)
+        self.tree_view.setColumnHidden(2, True)
 
     # Delete all objects and children of those objects if any child doesn't containts the given string and highlight the text
     def search(self):
