@@ -5,16 +5,6 @@ import os, json, socket, configparser, time, uuid
 import psycopg2
 import psycopg2.extras
 
-from admin import CapoomAdminClient
-from settingsui import Ui_dialog_settings
-from areusure import Ui_areYouSure
-from areusurevalidator import Ui_areYouSureValid
-from omnisettings import Ui_omniSettings
-
-from consts import JobStatus, ClientStatus
-from get_credentials import get_credentials
-from custom_tabs.jobs_tab import JobView
-
 from PySide6.QtCore import (QEvent)
 
 from PySide6.QtGui import(
@@ -24,6 +14,20 @@ from PySide6.QtGui import(
 from PySide6.QtWidgets import(
     QDialog, QAbstractItemView
 )
+
+from admin import CapoomAdminClient
+from settingsui import Ui_dialog_settings
+from areusure import Ui_areYouSure
+from areusurevalidator import Ui_areYouSureValid
+from omnisettings import Ui_omniSettings
+
+from consts import JobStatus, ClientStatus
+from get_credentials import get_credentials
+from custom_tabs.jobs_tab import JobView
+from custom_tabs.component_tree import ComponentView
+from custom_tabs.parm_settings_view import ParmView
+
+
 
 VERSION_PATH = "P:/pipeline/standalone/version.ini"
 GET_JOB = """SELECT * FROM "Jobs" WHERE job_uuid = %s"""
@@ -35,6 +39,16 @@ GET_JOB = """SELECT * FROM "Jobs" WHERE job_uuid = %s"""
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
+# -*- coding: utf-8 -*-
+
+################################################################################
+## Form generated from reading UI file 'adminclientbhKCJs.ui'
+##
+## Created by: Qt User Interface Compiler version 6.3.2
+##
+## WARNING! All changes made in this file will be lost when recompiling UI file!
+################################################################################
+
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
     QSize, QTime, QUrl, Qt)
@@ -218,6 +232,21 @@ class Ui_MainWindow(object):
         self.checkbox_startingstatus_cache.setChecked(True)
 
         self.verticalLayout_4.addWidget(self.checkbox_startingstatus_cache)
+
+        self.horizontalLayout_9 = QHBoxLayout()
+        self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
+        self.label_template = QLabel(self.verticalLayoutWidget_3)
+        self.label_template.setObjectName(u"label_template")
+
+        self.horizontalLayout_9.addWidget(self.label_template)
+
+        self.input_template = QComboBox(self.verticalLayoutWidget_3)
+        self.input_template.setObjectName(u"input_template")
+
+        self.horizontalLayout_9.addWidget(self.input_template)
+
+
+        self.verticalLayout_4.addLayout(self.horizontalLayout_9)
 
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
@@ -501,15 +530,95 @@ class Ui_MainWindow(object):
         self.jobsLayout.setSizeConstraint(QLayout.SetFixedSize)
         self.jobsLayout.setContentsMargins(0, 0, 0, 0)
         self.tabWidget.addTab(self.jobs, "")
+        self.hda_params = QWidget()
+        self.hda_params.setObjectName(u"hda_params")
+        self.verticalLayoutWidget_7 = QWidget(self.hda_params)
+        self.verticalLayoutWidget_7.setObjectName(u"verticalLayoutWidget_7")
+        self.verticalLayoutWidget_7.setGeometry(QRect(360, 540, 160, 71))
+        self.verticalLayout_6 = QVBoxLayout(self.verticalLayoutWidget_7)
+        self.verticalLayout_6.setObjectName(u"verticalLayout_6")
+        self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
+        self.saved_templates = QLabel(self.verticalLayoutWidget_7)
+        self.saved_templates.setObjectName(u"saved_templates")
+        sizePolicy2 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.saved_templates.sizePolicy().hasHeightForWidth())
+        self.saved_templates.setSizePolicy(sizePolicy2)
+        self.saved_templates.setAlignment(Qt.AlignCenter)
+
+        self.verticalLayout_6.addWidget(self.saved_templates)
+
+        self.comboBox = QComboBox(self.verticalLayoutWidget_7)
+        self.comboBox.setObjectName(u"comboBox")
+
+        self.verticalLayout_6.addWidget(self.comboBox)
+
+        self.pushButton = QPushButton(self.verticalLayoutWidget_7)
+        self.pushButton.setObjectName(u"pushButton")
+
+        self.verticalLayout_6.addWidget(self.pushButton)
+
+        self.pushButton_2 = QPushButton(self.hda_params)
+        self.pushButton_2.setObjectName(u"pushButton_2")
+        self.pushButton_2.setGeometry(QRect(930, 590, 91, 21))
+        self.horizontalLayoutWidget_3 = QWidget(self.hda_params)
+        self.horizontalLayoutWidget_3.setObjectName(u"horizontalLayoutWidget_3")
+        self.horizontalLayoutWidget_3.setGeometry(QRect(10, 110, 311, 501))
+        self.componentsLayout = QHBoxLayout(self.horizontalLayoutWidget_3)
+        self.componentsLayout.setObjectName(u"componentsLayout")
+        self.componentsLayout.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayoutWidget_4 = QWidget(self.hda_params)
+        self.horizontalLayoutWidget_4.setObjectName(u"horizontalLayoutWidget_4")
+        self.horizontalLayoutWidget_4.setGeometry(QRect(360, 30, 661, 501))
+        self.parmLayout = QHBoxLayout(self.horizontalLayoutWidget_4)
+        self.parmLayout.setObjectName(u"parmLayout")
+        self.parmLayout.setContentsMargins(0, 0, 0, 0)
+        self.label_4 = QLabel(self.hda_params)
+        self.label_4.setObjectName(u"label_4")
+        self.label_4.setGeometry(QRect(10, 10, 311, 20))
+        self.label_4.setAlignment(Qt.AlignCenter)
+        self.label_15 = QLabel(self.hda_params)
+        self.label_15.setObjectName(u"label_15")
+        self.label_15.setGeometry(QRect(360, 10, 661, 20))
+        self.label_15.setAlignment(Qt.AlignCenter)
+        self.line_2 = QFrame(self.hda_params)
+        self.line_2.setObjectName(u"line_2")
+        self.line_2.setGeometry(QRect(330, 30, 20, 581))
+        self.line_2.setFrameShape(QFrame.VLine)
+        self.line_2.setFrameShadow(QFrame.Sunken)
+        self.horizontalLayoutWidget_6 = QWidget(self.hda_params)
+        self.horizontalLayoutWidget_6.setObjectName(u"horizontalLayoutWidget_6")
+        self.horizontalLayoutWidget_6.setGeometry(QRect(10, 40, 311, 26))
+        self.horizontalLayout_4 = QHBoxLayout(self.horizontalLayoutWidget_6)
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.horizontalLayout_4.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout_10 = QHBoxLayout()
+        self.horizontalLayout_10.setObjectName(u"horizontalLayout_10")
+        self.label_structure_2 = QLabel(self.horizontalLayoutWidget_6)
+        self.label_structure_2.setObjectName(u"label_structure_2")
+
+        self.horizontalLayout_10.addWidget(self.label_structure_2)
+
+        self.input_structure_2 = QComboBox(self.horizontalLayoutWidget_6)
+        self.input_structure_2.setObjectName(u"input_structure_2")
+
+        self.horizontalLayout_10.addWidget(self.input_structure_2)
+
+
+        self.horizontalLayout_4.addLayout(self.horizontalLayout_10)
+
+        self.input_hda_search = QLineEdit(self.hda_params)
+        self.input_hda_search.setObjectName(u"input_hda_search")
+        self.input_hda_search.setGeometry(QRect(10, 80, 311, 21))
+        self.input_hda_search.setAlignment(Qt.AlignCenter)
+        self.tabWidget.addTab(self.hda_params, "")
         self.logs = QWidget()
         self.logs.setObjectName(u"logs")
         self.listView_logs = QListView(self.logs)
         self.listView_logs.setObjectName(u"listView_logs")
         self.listView_logs.setGeometry(QRect(10, 10, 1021, 601))
         self.tabWidget.addTab(self.logs, "")
-        self.hda_params = QWidget()
-        self.hda_params.setObjectName(u"hda_params")
-        self.tabWidget.addTab(self.hda_params, "")
 
         self.verticalLayout.addWidget(self.tabWidget)
 
@@ -522,11 +631,11 @@ class Ui_MainWindow(object):
         self.label = QLabel(self.verticalLayoutWidget_2)
         self.label.setObjectName(u"label")
         self.label.setEnabled(True)
-        sizePolicy2 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
-        sizePolicy2.setHorizontalStretch(0)
-        sizePolicy2.setVerticalStretch(0)
-        sizePolicy2.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
-        self.label.setSizePolicy(sizePolicy2)
+        sizePolicy3 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
+        self.label.setSizePolicy(sizePolicy3)
         self.label.setMinimumSize(QSize(0, 16))
         self.label.setAlignment(Qt.AlignHCenter|Qt.AlignTop)
         self.label.setWordWrap(True)
@@ -598,7 +707,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(2)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -621,6 +730,7 @@ class Ui_MainWindow(object):
         self.button_createhouse.setText(QCoreApplication.translate("MainWindow", u"Cache Houses", None))
         self.button_render.setText(QCoreApplication.translate("MainWindow", u"Render Caches", None))
         self.checkbox_startingstatus_cache.setText(QCoreApplication.translate("MainWindow", u"Immidiately start the job", None))
+        self.label_template.setText(QCoreApplication.translate("MainWindow", u"Template", None))
         self.label_structure.setText(QCoreApplication.translate("MainWindow", u"Structure", None))
         self.label_8.setText(QCoreApplication.translate("MainWindow", u"Render Settings", None))
         self.label_9.setText(QCoreApplication.translate("MainWindow", u"Project Id: ", None))
@@ -660,8 +770,15 @@ class Ui_MainWindow(object):
         self.button_refreshjobs.setText(QCoreApplication.translate("MainWindow", u"Refresh Jobslist", None))
         self.button_clearhistory.setText(QCoreApplication.translate("MainWindow", u"Clear History", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.jobs), QCoreApplication.translate("MainWindow", u"Jobs", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.logs), QCoreApplication.translate("MainWindow", u"Logs", None))
+        self.saved_templates.setText(QCoreApplication.translate("MainWindow", u"Saved Templates", None))
+        self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Load Template", None))
+        self.pushButton_2.setText(QCoreApplication.translate("MainWindow", u"Save Template", None))
+        self.label_4.setText(QCoreApplication.translate("MainWindow", u"Components and HDA's", None))
+        self.label_15.setText(QCoreApplication.translate("MainWindow", u"Parameter Randomization Interface", None))
+        self.label_structure_2.setText(QCoreApplication.translate("MainWindow", u"Structure", None))
+        self.input_hda_search.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Search for Component or HDA", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.hda_params), QCoreApplication.translate("MainWindow", u"HDA setup", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.logs), QCoreApplication.translate("MainWindow", u"Logs", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"Clients", None))
         self.button_select_avails.setText(QCoreApplication.translate("MainWindow", u"Sel. Availables", None))
         self.button_select_all.setText(QCoreApplication.translate("MainWindow", u"Force All", None))
@@ -698,6 +815,8 @@ class Ui_MainWindow(object):
         self.init_settings()
         self.init_omni_settings()
         self.init_jobs()
+        self.init_components()
+        self.init_parm_settings()
         self.init_button_actions()
         self.init_client_list_view()
         self.init_structure_list()
@@ -746,6 +865,9 @@ class Ui_MainWindow(object):
         self.button_settings.triggered.connect(self.open_settings)
         self.button_updateclients.triggered.connect(self.update_clients)
 
+        self.input_structure_2.currentTextChanged.connect(self.components.init_model)
+        self.input_hda_search.textChanged.connect(self.components.search)
+
         # Make these inputs only accept numbers
         self.input_projectid.setValidator(QIntValidator())
         self.input_frame.setValidator(QIntValidator())
@@ -764,7 +886,6 @@ class Ui_MainWindow(object):
         self.db_cur = self.db_conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     def init_settings(self):
-        # make a new app
         self.settingswidget = QDialog()
 
         self.settingsui=Ui_dialog_settings()
@@ -785,6 +906,15 @@ class Ui_MainWindow(object):
         self.jobsLayout.addLayout(self.jobsview)
         self.jobsLayout.addLayout(self.horizontalLayout_12)
 
+    def init_components(self):
+        self.components = ComponentView(self.db_conn, self.db_cur, self)
+
+        self.componentsLayout.addLayout(self.components)
+        self.componentsLayout.addLayout(self.horizontalLayout_12)
+
+    def init_parm_settings(self):
+        self.parm_settings = ParmView(self.db_conn, self.db_cur, self)
+        self.parmLayout.addLayout(self.parm_settings)
 
     def init_client_list_view(self):
         self.list_clients.setSelectionMode(QAbstractItemView.ExtendedSelection)
@@ -796,14 +926,20 @@ class Ui_MainWindow(object):
         self.adminthread = threading.Thread(target=self.admin.run)
         self.adminthread.start()
         self.jobsview.refresh()
+        
+        # TODO hide the columns after setting model
         self.jobsview.refresh()
 
     def init_structure_list(self):
         self.input_structure.clear()
+        self.input_structure_2.clear()
+
         self.db_cur.execute("""SELECT structure_name FROM "Structures" """)
         structures = self.db_cur.fetchall()
+
         for structure in structures:
             self.input_structure.addItem(structure[0])
+            self.input_structure_2.addItem(structure[0])
 
 
     def cl_list_selection_behaviour(self):
@@ -958,48 +1094,6 @@ class Ui_MainWindow(object):
                     item.setCheckState(Qt.Checked)
                 else:
                     item.setCheckState(Qt.Unchecked)
-
-        # list = self.listWidget
-        # list.clear()
-        # if self.admin is not None:
-        #     # Add available clients to the list
-        #     for client in self.admin.all_clients:
-        #         userWidgetItem = QListWidgetItem(list)
-        #         userWidgetItem.setText(QCoreApplication.translate("MainWindow", client, None))
-        #         try:
-        #             if client in self.selected_workers:
-        #                 userWidgetItem.setCheckState(Qt.Checked)
-        #             else:
-        #                 userWidgetItem.setCheckState(Qt.Unchecked)
-        #         except KeyError:
-        #             print("Client is added in this update")
-        #             pass
-
-        #         if self.admin.all_clients[client] == ClientStatus.AVAILABLE.value:
-        #             userWidgetItem.setForeground(self.c_avail)
-        #             if client in self.admin.check:
-        #                 userWidgetItem.setCheckState(Qt.Checked)
-        #                 userWidgetItem.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-        #                 self.admin.check.remove(client)
-        #                 self.send_new_workers()
-
-        #         elif self.admin.all_clients[client] == ClientStatus.BUSY.value:
-        #             userWidgetItem.setForeground(self.c_busy)
-
-        #         elif self.admin.all_clients[client] == ClientStatus.OFFLINE.value:
-        #             userWidgetItem.setForeground(self.c_offline)
-        #             userWidgetItem.setFlags(Qt.NoItemFlags)
-        #             if client in self.admin.uncheck:
-        #                 userWidgetItem.setCheckState(Qt.Unchecked)
-        #                 self.admin.uncheck.remove(client)
-
-        #                 # TODO check if we are overriding client's wishes lmao
-        #                 self.send_new_workers()
-
-
-
-        #         list.addItem(userWidgetItem)
-
 
 
     def create_house(self):
