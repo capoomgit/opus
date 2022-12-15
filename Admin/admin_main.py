@@ -5,6 +5,16 @@ import os, json, socket, configparser, time, uuid
 import psycopg2
 import psycopg2.extras
 
+from PySide6.QtCore import (QEvent)
+
+from PySide6.QtGui import(
+    QStandardItemModel, QStandardItem, QIntValidator
+)
+
+from PySide6.QtWidgets import(
+    QDialog, QAbstractItemView
+)
+
 from admin import CapoomAdminClient
 from settingsui import Ui_dialog_settings
 from areusure import Ui_areYouSure
@@ -15,16 +25,9 @@ from consts import JobStatus, ClientStatus
 from get_credentials import get_credentials
 from custom_tabs.jobs_tab import JobView
 from custom_tabs.component_tree import ComponentView
+from custom_tabs.parm_settings_view import ParmView
 
-from PySide6.QtCore import (QEvent)
 
-from PySide6.QtGui import(
-    QStandardItemModel, QStandardItem, QIntValidator
-)
-
-from PySide6.QtWidgets import(
-    QDialog, QAbstractItemView
-)
 
 VERSION_PATH = "P:/pipeline/standalone/version.ini"
 GET_JOB = """SELECT * FROM "Jobs" WHERE job_uuid = %s"""
@@ -813,6 +816,7 @@ class Ui_MainWindow(object):
         self.init_omni_settings()
         self.init_jobs()
         self.init_components()
+        self.init_parm_settings()
         self.init_button_actions()
         self.init_client_list_view()
         self.init_structure_list()
@@ -907,6 +911,10 @@ class Ui_MainWindow(object):
 
         self.componentsLayout.addLayout(self.components)
         self.componentsLayout.addLayout(self.horizontalLayout_12)
+
+    def init_parm_settings(self):
+        self.parm_settings = ParmView(self.db_conn, self.db_cur, self)
+        self.parmLayout.addLayout(self.parm_settings)
 
     def init_client_list_view(self):
         self.list_clients.setSelectionMode(QAbstractItemView.ExtendedSelection)
@@ -1086,48 +1094,6 @@ class Ui_MainWindow(object):
                     item.setCheckState(Qt.Checked)
                 else:
                     item.setCheckState(Qt.Unchecked)
-
-        # list = self.listWidget
-        # list.clear()
-        # if self.admin is not None:
-        #     # Add available clients to the list
-        #     for client in self.admin.all_clients:
-        #         userWidgetItem = QListWidgetItem(list)
-        #         userWidgetItem.setText(QCoreApplication.translate("MainWindow", client, None))
-        #         try:
-        #             if client in self.selected_workers:
-        #                 userWidgetItem.setCheckState(Qt.Checked)
-        #             else:
-        #                 userWidgetItem.setCheckState(Qt.Unchecked)
-        #         except KeyError:
-        #             print("Client is added in this update")
-        #             pass
-
-        #         if self.admin.all_clients[client] == ClientStatus.AVAILABLE.value:
-        #             userWidgetItem.setForeground(self.c_avail)
-        #             if client in self.admin.check:
-        #                 userWidgetItem.setCheckState(Qt.Checked)
-        #                 userWidgetItem.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-        #                 self.admin.check.remove(client)
-        #                 self.send_new_workers()
-
-        #         elif self.admin.all_clients[client] == ClientStatus.BUSY.value:
-        #             userWidgetItem.setForeground(self.c_busy)
-
-        #         elif self.admin.all_clients[client] == ClientStatus.OFFLINE.value:
-        #             userWidgetItem.setForeground(self.c_offline)
-        #             userWidgetItem.setFlags(Qt.NoItemFlags)
-        #             if client in self.admin.uncheck:
-        #                 userWidgetItem.setCheckState(Qt.Unchecked)
-        #                 self.admin.uncheck.remove(client)
-
-        #                 # TODO check if we are overriding client's wishes lmao
-        #                 self.send_new_workers()
-
-
-
-        #         list.addItem(userWidgetItem)
-
 
 
     def create_house(self):
