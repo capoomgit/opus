@@ -209,15 +209,16 @@ def delete_hdas(nodes=None):
 #         hou.ui.displayMessage("The selected node type is {}".format(selected_nodes[0].type().name()))
 
 
-# def show_node_type():
-#     """Show the node name """
-#     selected_nodes = hou.selectedNodes()
-#     if len(selected_nodes) == 0:
-#         hou.ui.displayMessage("Please select a node")
-#     elif len(selected_nodes) > 1:
-#         hou.ui.displayMessage("Please select only one node")
-#     else:
-#         hou.ui.displayMessage("The selected node type is {}".format(selected_nodes[0].type().name()))
+def show_node_type():
+    """Show the node type of the selected node """
+    selected_nodes = hou.selectedNodes()
+    if len(selected_nodes) == 0:
+        hou.ui.displayMessage("Please select a node")
+    elif len(selected_nodes) > 1:
+        hou.ui.displayMessage("Please select only one node")
+    else:
+        hou.ui.displayMessage("The selected node type is {}".format(selected_nodes[0].type()))
+        pprint(selected_nodes[0].type())
 
 
 # #show the node type of all the nodes in the scene
@@ -319,8 +320,7 @@ def add_quick_material():
                                     "principledshader_metallic_texture_1"]
 
             material_notations =  ["BaseColor", "Opacity", "Normal", "Roughness", "Metallic"]
-            for parm in quick_material_parms:
-                
+            for parm in quick_material_parms: 
 
                 texture_name = name + "_" + material_notations[quick_material_parms.index(parm)] + ".jpg"
                 texture_full_path = os.path.join(texture_folder, texture_name)
@@ -341,6 +341,55 @@ def add_quick_material():
             missing_textures = missing_textures.replace("'", "")
             missing_textures = missing_textures.replace(",", "\n")
             hou.ui.displayMessage("The following textures are missing: {}".format(missing_textures))
+
+def switch_quick_material_resulotions():
+    """Change the resolution of the quick material nodes"""
+
+    # show the popup window and get the selected resolution from the popup window
+    default_selected = (0,)
+    resolution = hou.ui.selectFromList(["1024", "2048", "4096"], default_choices=default_selected, exclusive=True, title="Select resolution", message="Select resolution")
+    
+    selected = (1,)
+    print(resolution)
+    if resolution[0] == 0:
+        selected = "1k"
+    elif resolution[0] == 1:
+        selected = "2k"
+    elif resolution[0] == 2:
+        selected = "4k"
+
+    #get all quick material nodes
+    all_nodes = hou.node("/").allSubChildren()
+    quick_material_nodes = []
+    for node in all_nodes:
+        if node.type() == hou.sopNodeTypeCategory().nodeTypes()['labs::quickmaterial::2.2']:
+            quick_material_nodes.append(node)
+
+    # change the resolution of the quick material nodes
+    for node in quick_material_nodes:
+        #get the current texture paths
+        quick_material_parms = ["principledshader_basecolor_texture_1", 
+                                "principledshader_opaccolor_texture_1", 
+                                "principledshader_baseNormal_texture_1", 
+                                "principledshader_rough_texture_1", 
+                                "principledshader_metallic_texture_1"]
+        
+        for parm in quick_material_parms:
+            #get the current texture path
+            texture_path = node.parm(parm).eval()
+            #find the current resolution
+            if "1k" in texture_path:
+                current = "1k"
+            elif "2k" in texture_path:
+                current = "2k"
+            elif "4k" in texture_path:
+                current = "4k"
+
+            #change 1k to selected resolution
+            texture_path = texture_path.replace(current, selected)
+            #set the new texture path
+            node.parm(parm).set(texture_path)
+
 
 def clear_groups_and_attribs():
     """Clear all groups and attribs"""
