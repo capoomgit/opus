@@ -350,13 +350,13 @@ def switch_quick_material_resulotions():
     resolution = hou.ui.selectFromList(["1024", "2048", "4096"], default_choices=default_selected, exclusive=True, title="Select resolution", message="Select resolution")
     
     selected = (1,)
-    print(resolution)
     if resolution[0] == 0:
         selected = "1k"
     elif resolution[0] == 1:
         selected = "2k"
     elif resolution[0] == 2:
         selected = "4k"
+    
 
     #get all quick material nodes
     all_nodes = hou.node("/").allSubChildren()
@@ -384,6 +384,19 @@ def switch_quick_material_resulotions():
                 current = "2k"
             elif "4k" in texture_path:
                 current = "4k"
+            elif "1K" in texture_path:
+                current = "1K"
+            elif "2K" in texture_path:
+                current = "2K"
+            elif "4K" in texture_path:
+                current = "4K"
+
+            # detect lower case and upper case
+            if current.islower():
+                selected = selected.lower()
+            elif current.isupper():
+                selected = selected.upper()
+
 
             #change 1k to selected resolution
             texture_path = texture_path.replace(current, selected)
