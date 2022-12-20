@@ -48,6 +48,7 @@ def create_structure(structname, project_id, work_id, version):
     for obj_id in object_ids:
         cur.execute(GET_OBJECT_BY_ID, (obj_id,))
         obj = cur.fetchone()
+
         if obj in multiples:
             # We need to get rid of duplicates
             obj_styles = set(all_styles[obj["obj_name"]])
@@ -151,7 +152,12 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
 
                             # Place the filecache
                             first_hda_in_fc = hougeo.createNode("filecache")
-                            filepath = str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=dep_obj["obj_name"], project_id=project_id, work_id=work_id, Out=dependent_objs_outs[dep_i], id=0)+ ".bgeo.sc")
+
+                            if dep_id == -1:
+                                # TODO make the house part more generic
+                                filepath = str(MERGE_PATH.format(project_id=project_id, version=version, structure="House") + f"/Merged_{project_id}_{work_id}_{version}.bgeo.sc")
+                            else:
+                                filepath = str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=dep_obj["obj_name"], project_id=project_id, work_id=work_id, Out=dependent_objs_outs[dep_i], id=0)+ ".bgeo.sc")
                             first_hda_in_fc.parm('loadfromdisk').set(1)
                             first_hda_in_fc.parm("file").set(filepath)
                             first_hda_in_fc.parm("filemethod").set(1)

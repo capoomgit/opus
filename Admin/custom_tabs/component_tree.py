@@ -35,7 +35,6 @@ class ComponentView(QVBoxLayout):
         print(self.tree_view.isColumnHidden(1))
         print(self.tree_view.isColumnHidden(2))
 
-
         self.addWidget(self.tree_view)
         # self.init_model()
         self.tree_view.clicked.connect(self.update_parm_settings)
@@ -133,6 +132,7 @@ class ComponentView(QVBoxLayout):
             print(self.tree_model.item(to_remove - i, 0).text())
             self.tree_model.removeRows(to_remove - i, 1)
 
+
     def update_parm_settings(self, index : QModelIndex):
         # Get the item
 
@@ -148,6 +148,8 @@ class ComponentView(QVBoxLayout):
         id = self.tree_model.itemFromIndex(id_index).text()
 
         self.main.parm_settings.init_model(id, table_name)
+
+
     # Github copilot suggested this, we can maybe implement it later
     # def create_context_menu(self):
     #     self.context_menu = QMenu(self.tree_view)

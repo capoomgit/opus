@@ -39,15 +39,6 @@ GET_JOB = """SELECT * FROM "Jobs" WHERE job_uuid = %s"""
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
-# -*- coding: utf-8 -*-
-
-################################################################################
-## Form generated from reading UI file 'adminclientbhKCJs.ui'
-##
-## Created by: Qt User Interface Compiler version 6.3.2
-##
-## WARNING! All changes made in this file will be lost when recompiling UI file!
-################################################################################
 
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
@@ -534,7 +525,7 @@ class Ui_MainWindow(object):
         self.hda_params.setObjectName(u"hda_params")
         self.verticalLayoutWidget_7 = QWidget(self.hda_params)
         self.verticalLayoutWidget_7.setObjectName(u"verticalLayoutWidget_7")
-        self.verticalLayoutWidget_7.setGeometry(QRect(360, 540, 160, 71))
+        self.verticalLayoutWidget_7.setGeometry(QRect(360, 540, 160, 76))
         self.verticalLayout_6 = QVBoxLayout(self.verticalLayoutWidget_7)
         self.verticalLayout_6.setObjectName(u"verticalLayout_6")
         self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
@@ -554,14 +545,14 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_6.addWidget(self.comboBox)
 
-        self.pushButton = QPushButton(self.verticalLayoutWidget_7)
-        self.pushButton.setObjectName(u"pushButton")
+        self.button_load_template = QPushButton(self.verticalLayoutWidget_7)
+        self.button_load_template.setObjectName(u"button_load_template")
 
-        self.verticalLayout_6.addWidget(self.pushButton)
+        self.verticalLayout_6.addWidget(self.button_load_template)
 
-        self.pushButton_2 = QPushButton(self.hda_params)
-        self.pushButton_2.setObjectName(u"pushButton_2")
-        self.pushButton_2.setGeometry(QRect(930, 590, 91, 21))
+        self.button_save_template = QPushButton(self.hda_params)
+        self.button_save_template.setObjectName(u"button_save_template")
+        self.button_save_template.setGeometry(QRect(930, 590, 91, 21))
         self.horizontalLayoutWidget_3 = QWidget(self.hda_params)
         self.horizontalLayoutWidget_3.setObjectName(u"horizontalLayoutWidget_3")
         self.horizontalLayoutWidget_3.setGeometry(QRect(10, 110, 311, 501))
@@ -570,7 +561,7 @@ class Ui_MainWindow(object):
         self.componentsLayout.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayoutWidget_4 = QWidget(self.hda_params)
         self.horizontalLayoutWidget_4.setObjectName(u"horizontalLayoutWidget_4")
-        self.horizontalLayoutWidget_4.setGeometry(QRect(360, 30, 661, 501))
+        self.horizontalLayoutWidget_4.setGeometry(QRect(360, 40, 661, 491))
         self.parmLayout = QHBoxLayout(self.horizontalLayoutWidget_4)
         self.parmLayout.setObjectName(u"parmLayout")
         self.parmLayout.setContentsMargins(0, 0, 0, 0)
@@ -771,8 +762,8 @@ class Ui_MainWindow(object):
         self.button_clearhistory.setText(QCoreApplication.translate("MainWindow", u"Clear History", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.jobs), QCoreApplication.translate("MainWindow", u"Jobs", None))
         self.saved_templates.setText(QCoreApplication.translate("MainWindow", u"Saved Templates", None))
-        self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Load Template", None))
-        self.pushButton_2.setText(QCoreApplication.translate("MainWindow", u"Save Template", None))
+        self.button_load_template.setText(QCoreApplication.translate("MainWindow", u"Load Template", None))
+        self.button_save_template.setText(QCoreApplication.translate("MainWindow", u"Save Template", None))
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"Components and HDA's", None))
         self.label_15.setText(QCoreApplication.translate("MainWindow", u"Parameter Randomization Interface", None))
         self.label_structure_2.setText(QCoreApplication.translate("MainWindow", u"Structure", None))
@@ -788,6 +779,8 @@ class Ui_MainWindow(object):
         self.label_stat.setText(QCoreApplication.translate("MainWindow", u"Error", None))
         self.menuSettings.setTitle(QCoreApplication.translate("MainWindow", u"Settings", None))
     # retranslateUi
+
+
 
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
@@ -915,7 +908,8 @@ class Ui_MainWindow(object):
     def init_parm_settings(self):
         self.parm_settings = ParmView(self.db_conn, self.db_cur, self)
         self.parmLayout.addLayout(self.parm_settings)
-
+        self.button_load_template.clicked.connect(lambda: self.parm_settings.save_or_load_template(intent="load"))
+        self.button_save_template.clicked.connect(lambda: self.parm_settings.save_or_load_template(intent="save"))
     def init_client_list_view(self):
         self.list_clients.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.list_clients.itemClicked.connect(self.cl_list_selection_behaviour)
