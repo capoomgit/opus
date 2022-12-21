@@ -210,9 +210,9 @@ class CapoomServer():
         if s_uuid in self.all_ranks:
             logger.debug(f"Removing {disconnected_address} from all_ranks")
             self.all_ranks.pop(s_uuid)
-        if self.get_assigned_work(s_uuid):
+        if self.assigned_work_from_socket(s_uuid):
             logger.debug(f"Removing {disconnected_address} work from assigned")
-            self.assigned.remove(self.get_assigned_work(s_uuid))
+            self.assigned.remove(self.assigned_work_from_socket(s_uuid))
 
         self.send_cl_to_admins()
 
