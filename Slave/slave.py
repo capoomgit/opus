@@ -6,7 +6,6 @@ import subprocess
 import configparser
 
 
-from runhda_dev import init_creation, create_structure
 from server_utils import CapoomResponse
 from render import render_smth
 from get_credentials import get_credentials
@@ -14,6 +13,7 @@ from consts import ClientRanks, ClientStatus
 import hou
 from stage import stage_usd
 
+from runhda_dev import init_creation, create_structure, init_logger
 import psycopg2
 import psycopg2.extras
 
@@ -24,6 +24,11 @@ VERSION_PATH = "P:/pipeline/standalone/version.ini"
 import logging
 from logger import setup_logger
 logger = setup_logger(f"{socket.gethostname()}_slave.log")
+
+init_logger(logger)
+
+# Pass our logger to the runhda_dev module
+# check_init_logger(logger)
 
 creds = get_credentials()
 print(creds)

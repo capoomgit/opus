@@ -210,9 +210,9 @@ class CapoomServer():
         if s_uuid in self.all_ranks:
             logger.debug(f"Removing {disconnected_address} from all_ranks")
             self.all_ranks.pop(s_uuid)
-        if self.get_assigned_work(s_uuid):
+        if self.assigned_work_from_socket(s_uuid):
             logger.debug(f"Removing {disconnected_address} work from assigned")
-            self.assigned.remove(self.get_assigned_work(s_uuid))
+            self.assigned.remove(self.assigned_work_from_socket(s_uuid))
 
         self.send_cl_to_admins()
 
@@ -563,7 +563,7 @@ class CapoomServer():
        
     
     def handle_jobs(self, socket, cmd):
-        
+          
         if cmd.data["error_count"] > 9:
             logger.critical("Command failed 10 times, removing it")
             # self.rem_cmds(cmd, JobStatus.FAILED.value)
@@ -578,6 +578,13 @@ class CapoomServer():
                 self.remove_sock(socket, "Client disconnected during work")
                 
                 return
+    
+        elif sock_uuid not in self.all_ranks.keys():
+            logger.error(f"Client with uuid {sock_uuid} not found")
+            self.remove_sock(socket, "Client not found")
+            
+            return
+
         elif self.all_ranks[sock_uuid] == ClientRanks.ADMIN.value:
             return
         

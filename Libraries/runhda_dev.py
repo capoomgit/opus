@@ -13,7 +13,7 @@ from get_credentials import get_credentials
 try:
     os.add_dll_directory("C:\\Program Files\\Side Effects Software\\Houdini 19.5.368\\bin")
 except Exception:
-    print("DLL directory could not be added")
+    runhda_logger.critical("DLL directory could not be added")
     sys.exit()
 
 import hou
@@ -33,6 +33,13 @@ GET_PATHS_BY_ID = """SELECT * FROM "Paths" WHERE path_id = %s"""
 GET_HDA_BY_ID = """SELECT * FROM "Hdas" WHERE hda_id = %s"""
 GET_MULTIPLE_OBJECTS ="""SELECT * FROM "Objects" WHERE needed_data_for_multiple_objs NOTNULL"""
 
+# Passing the logger from slave to here
+runhda_logger = None
+def init_logger(logger):
+    global runhda_logger
+    runhda_logger = logger
+    runhda_logger.info("Runhda logger initialized")
+
 def create_structure(structname, project_id, work_id, version):
     # Format XXXX
     version = str(version).zfill(4)
@@ -40,7 +47,8 @@ def create_structure(structname, project_id, work_id, version):
     # TODO remove count, instead use workid
     cur.execute(GET_STRUCT_BY_NAME, (structname,))
     structure = cur.fetchone()
-    print("Creating structure", structure["structure_name"])
+
+    runhda_logger.info(f'Creating structure {structure["structure_name"]}')
 
     object_ids = structure["obj_ids"]
     obj_creation_results = []
@@ -48,6 +56,7 @@ def create_structure(structname, project_id, work_id, version):
     for obj_id in object_ids:
         cur.execute(GET_OBJECT_BY_ID, (obj_id,))
         obj = cur.fetchone()
+
         if obj in multiples:
             # We need to get rid of duplicates
             obj_styles = set(all_styles[obj["obj_name"]])
@@ -63,10 +72,10 @@ def create_structure(structname, project_id, work_id, version):
     merge_objects_of_structure(project_id, work_id, version, parent_structure=structname)
 
     if all(obj_creation_results):
-        print("Structure created successfully")
+        runhda_logger.info("Structure created successfully")
         return True
     else:
-        print("Structure created but it has failed objects")
+        runhda_logger.info("Structure created but it has failed objects")
         return False
     # do stuff with cache_name
 
@@ -77,7 +86,7 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
     try:
         cur.execute(GET_OBJECT_BY_ID, (obj_id,))
         obj = cur.fetchone()
-        print("Creating object", obj["obj_name"])
+        runhda_logger.info(f'Creating object {obj["obj_name"]}')
 
 
         # we can rename this after
@@ -117,9 +126,9 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
                 path = cur.fetchone()
                 paths.append(path)
             
-            print("All paths", paths)
+            runhda_logger.debug(f"All paths {paths}")
             sel_path = random.choice(paths)
-            print("sel_path", sel_path)
+            runhda_logger.info(f"Selected paths {sel_path}")
 
 
             for j, hda_id in enumerate(sel_path["hda_ids"]):
@@ -151,7 +160,12 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
 
                             # Place the filecache
                             first_hda_in_fc = hougeo.createNode("filecache")
-                            filepath = str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=dep_obj["obj_name"], project_id=project_id, work_id=work_id, Out=dependent_objs_outs[dep_i], id=0)+ ".bgeo.sc")
+
+                            if dep_id == -1:
+                                # TODO make the house part more generic
+                                filepath = str(MERGE_PATH.format(project_id=project_id, version=version, structure="House") + f"/Merged_{project_id}_{work_id}_{version}.bgeo.sc")
+                            else:
+                                filepath = str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=dep_obj["obj_name"], project_id=project_id, work_id=work_id, Out=dependent_objs_outs[dep_i], id=0)+ ".bgeo.sc")
                             first_hda_in_fc.parm('loadfromdisk').set(1)
                             first_hda_in_fc.parm("file").set(filepath)
                             first_hda_in_fc.parm("filemethod").set(1)
@@ -199,15 +213,15 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
             out_fc.setInput(0, last_layer_last_hda, out)
             out_fc.parm('execute').pressButton()
 
-        hou.hipFile.save(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=obj["obj_name"], project_id=project_id, work_id=work_id, Out=out, id=id) + ".hiplc"))
+        hou.hipFile.save(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=obj["obj_name"], project_id=project_id, work_id=work_id, Out="0", id=id) + ".hiplc"))
 
         # TODO maybe add hda name as prefix so there are no overlaps in hda names
-        with open(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=obj["obj_name"], project_id=project_id, work_id=work_id, Out=out, id=id) + ".json"), "w") as f:
+        with open(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=obj["obj_name"], project_id=project_id, work_id=work_id, Out="0", id=id) + ".json"), "w") as f:
             json.dump(obj_parms, f, indent=4)
         return True
 
     except Exception as e:
-        hou.hipFile.save(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + "Errors/" + CACHE_NAME.format(Object=obj["obj_name"], project_id=project_id, work_id=work_id, Out=out, id=id) + ".hiplc"))
+        hou.hipFile.save(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + "Errors/" + CACHE_NAME.format(Object=obj["obj_name"], project_id=project_id, work_id=work_id, Out="0", id=id) + ".hiplc"))
         return False
 
 
@@ -268,7 +282,7 @@ def set_hda_parms(hda, db_hda, seed, obj_name=None, style=None, prediction={}):
                             parmmins[parmi] = hda.geometry().attribValue(parm+"_min")
 
                     except AttributeError as e:
-                        print("There are no min attributes in the geometry")
+                        runhda_logger.warn("There are no min attributes in the geometry")
 
                     # Try overrideng the maximum value
 
@@ -276,7 +290,7 @@ def set_hda_parms(hda, db_hda, seed, obj_name=None, style=None, prediction={}):
                         if hda.geometry().findGlobalAttrib(parm+"_max") is not None:
                             parmmaxes[parmi] = hda.geometry().attribValue(parm+"_max")
                     except AttributeError as e:
-                        print("There are no max attributes in the geometry")
+                        runhda_logger.warn("There are no max attributes in the geometry")
 
 
                     random.seed(seed)
@@ -284,11 +298,12 @@ def set_hda_parms(hda, db_hda, seed, obj_name=None, style=None, prediction={}):
                     overriden_max = cast_parm(parmmaxes[parmi], parmtypes[parmi])
                     overriden_val_rnd = cast_parm(random.uniform(overriden_min, overriden_max), parmtypes[parmi])
                     try:
+                        runhda_logger.info(f"Setting parameter {parm} of {hda.name()} with {overriden_val_rnd}")
                         hda.parm(parm).set(overriden_val_rnd)
                         obj_parms[str(db_hda["hda_name"])][parm] = overriden_val_rnd
 
                     except AttributeError:
-                        print("Attribute couldn't be set:", parm, "of", hda.name())
+                        runhda_logger.error(f"Attribute couldn't be set: {parm} of {hda.name()}")
                 # We need to override to defaults
                 else:
                     hda.parm(parm).set(cast_parm(defaults[parmi], parmtypes[parmi]))
@@ -377,7 +392,7 @@ def create_placer(project_id, work_id, version, parent_structure, object_name, f
     output.setInput(0, merge)
     output.parm("execute").pressButton()
     hou.hipFile.save(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=object_name+"_placed", project_id=project_id, work_id=work_id, Out=0, id=0) + ".hiplc"))
-    print("Placement done:", object_name)
+    runhda_logger.info(f"Placement done: {object_name}")
 
 def merge_objects_of_structure(project_id, work_id, version, parent_structure="Standalone"):
     hou.hipFile.clear(suppress_save_prompt=1)
@@ -457,19 +472,19 @@ def init_creation():
     # This is a string array of hda's that store the needed data
     multiple_data_hdas = []
 
-    # print("Multiples", multiples)
+    # runhda_logger.info("Multiples", multiples)
     # Loop over all objects that need multiple instances
     for multiple in multiples:
         # The object ids that data comes from
         mult_object_ids = multiple["needed_data_for_multiple_objs"]
         for mult_object_id in mult_object_ids:
-            # print("Mult object id", mult_object_id)
+            # runhda_logger.info("Mult object id", mult_object_id)
             cur.execute(GET_OBJECT_BY_ID, (mult_object_id,))
             mult_object = cur.fetchone()
             if mult_object is not None:
                 multiple_data_hdas.append(mult_object)
 
-    # print("Data hdas", multiple_data_hdas)
+    # runhda_logger.info("Data hdas", multiple_data_hdas)
 
     # This dictionary contains the data of the objects that have multiple choices Tuple(Style, Panel)
     all_styles = dict()
