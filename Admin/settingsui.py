@@ -1,5 +1,6 @@
 import json
 
+from PySide6.QtGui import (QIntValidator)
 # -*- coding: utf-8 -*-
 
 ################################################################################
@@ -274,6 +275,9 @@ class Ui_dialog_settings(object):
         self.label_13.setText(QCoreApplication.translate("dialog_settings", u"Omniverse Settings Path", None))
         self.input_omnisettings.setText(QCoreApplication.translate("dialog_settings", u"C:/some/path", None))
     # retranslateUi
+    def field_validation(self):
+        self.input_dbport.setValidator(QIntValidator(0, 65535, self.input_dbport))
+        self.input_serverport.setValidator(QIntValidator(0, 65535, self.input_serverport))
 
     def load_settings(self):
         print("Loading settings")
