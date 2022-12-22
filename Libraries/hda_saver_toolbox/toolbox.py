@@ -13,7 +13,7 @@ def create_toolbox():
     #create new tabs named export and import in the shelf and add export button to the tab
     tab_widget = QtWidgets.QTabWidget()
 
-
+    # ------------------ Export ------------------
 
     # Create the button inside the tab widget
     export_widget = QtWidgets.QWidget()
@@ -46,8 +46,13 @@ def create_toolbox():
     utils_layout = QtWidgets.QVBoxLayout()
     utils_layout.setAlignment(QtCore.Qt.AlignTop)
 
+    # ------------------ Utils ------------------
+
     change_node_color = create_button("Change Node Color", panel_utils.change_node_color)
     utils_layout.addWidget(change_node_color)
+
+    clear_groups_and_attrs = create_button("Clear Groups and Attrs", panel_utils.clear_groups_and_attribs)
+    utils_layout.addWidget(clear_groups_and_attrs)
 
     add_quick_material = create_button("Add Quick Material", panel_utils.add_quick_material)
     utils_layout.addWidget(add_quick_material)
@@ -55,20 +60,27 @@ def create_toolbox():
     switch_quick_material_resolutions = create_button("Switch Quick Material Resolutions", panel_utils.switch_quick_material_resulotions)
     utils_layout.addWidget(switch_quick_material_resolutions)
 
-    show_node_name = create_button("Show Node Name", panel_utils.show_node_name)
-    utils_layout.addWidget(show_node_name)
-
-    show_node_type = create_button("Show Node Type", panel_utils.show_node_type)
-    utils_layout.addWidget(show_node_type)
-
-    show_node_parms = create_button("Show Node Parms", panel_utils.show_node_parms)
-    utils_layout.addWidget(show_node_parms)
-
-    clear_groups_and_attrs = create_button("Clear Groups and Attrs", panel_utils.clear_groups_and_attribs)
-    utils_layout.addWidget(clear_groups_and_attrs)
-
     utils_widget.setLayout(utils_layout)
     tab_widget.addTab(utils_widget, "Utils")
+
+    # ------------------ Development ------------------
+
+    development_widget = QtWidgets.QWidget()
+    development_layout = QtWidgets.QVBoxLayout()
+    development_layout.setAlignment(QtCore.Qt.AlignTop)
+
+    show_node_name = create_button("Show Node Name", panel_utils.show_node_name)
+    development_layout.addWidget(show_node_name)
+
+    show_node_type = create_button("Show Node Type", panel_utils.show_node_type)
+    development_layout.addWidget(show_node_type)
+
+    show_node_parms = create_button("Show Node Parms", panel_utils.show_node_parms)
+    development_layout.addWidget(show_node_parms)
+
+    development_widget.setLayout(development_layout)
+    tab_widget.addTab(development_widget, "Development")
+    
 
 
     # Return the top-level widget.

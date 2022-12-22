@@ -344,6 +344,9 @@ def add_quick_material():
 
 def switch_quick_material_resulotions():
     """Change the resolution of the quick material nodes"""
+    selected_nodes = hou.selectedNodes()
+    if len(selected_nodes) == 0:
+        hou.ui.displayMessage("Please select a node")
 
     # show the popup window and get the selected resolution from the popup window
     default_selected = (0,)
@@ -359,9 +362,9 @@ def switch_quick_material_resulotions():
     
 
     #get all quick material nodes
-    all_nodes = hou.node("/").allSubChildren()
+    selected_nodes = hou.selectedNodes()
     quick_material_nodes = []
-    for node in all_nodes:
+    for node in selected_nodes:
         if node.type() == hou.sopNodeTypeCategory().nodeTypes()['labs::quickmaterial::2.2']:
             quick_material_nodes.append(node)
 
@@ -390,6 +393,13 @@ def switch_quick_material_resulotions():
                 current = "2K"
             elif "4K" in texture_path:
                 current = "4K"
+            else:
+                # if the texture path does not contain any resolution, skip the texture path
+                # show a message box with the texture path
+
+                hou.ui.displayMessage("The texture path does not contain any resolution: {}".format(texture_path)) 
+                
+                return
 
             # detect lower case and upper case
             if current.islower():
