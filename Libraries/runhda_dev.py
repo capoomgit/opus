@@ -27,6 +27,7 @@ CACHE_NAME = "{Object}/{Object}_{project_id}_{work_id}_Out_{Out}_ID_{id}"
 
 GET_STRUCT_BY_NAME = """SELECT * FROM "Structures" WHERE structure_name = %s"""
 GET_OBJECT_BY_ID = """SELECT * FROM "Objects" WHERE obj_id = %s"""
+GET_OBJECTS_BY_IDS = """SELECT * FROM "Objects" WHERE obj_id IN %s"""
 GET_OBJECT_BY_NAME = """SELECT * FROM "Objects" WHERE obj_name = %s"""
 GET_COMPS_BY_ID = """SELECT * FROM "Components" WHERE component_id = %s"""
 GET_PATHS_BY_ID = """SELECT * FROM "Paths" WHERE path_id = %s"""
@@ -59,8 +60,10 @@ def create_structure(structname, project_id, work_id, version):
 
         if obj in multiples:
             # We need to get rid of duplicates
-            obj_styles = set(all_styles[obj["obj_name"]])
+            obj_styles = all_styles[obj["obj_name"]]
+            runhda_logger.info(f'Creating object {obj["obj_name"]} with {len(obj_styles)} styles')
             for style_counter, obj_style in enumerate(obj_styles):
+                runhda_logger.info(f'Creating object {obj["obj_name"]} with style {obj_style}')
                 result = create_object(obj_id, project_id, work_id, version, parent_structure=structname, style=obj_style, id=style_counter)
                 obj_creation_results.append(result)
 
@@ -150,30 +153,60 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
 
                 if i == j == 0:
                     first_hda = hda
-                    if dependent_objs_ids and dependent_objs_outs:
-                    # This lists indices are the input number of our first hda of this object
-                        file_caches = []
-                        # We have dependencies
-                        for dep_i, dep_id in enumerate(dependent_objs_ids):
-                            cur.execute(GET_OBJECT_BY_ID, (dep_id,))
-                            dep_obj = cur.fetchone()
 
-                            # Place the filecache
-                            first_hda_in_fc = hougeo.createNode("filecache")
 
-                            if dep_id == -1:
-                                # TODO make the house part more generic
-                                filepath = str(MERGE_PATH.format(project_id=project_id, version=version, structure="House") + f"/Merged_{project_id}_{work_id}_{version}.bgeo.sc")
-                            else:
-                                filepath = str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=dep_obj["obj_name"], project_id=project_id, work_id=work_id, Out=dependent_objs_outs[dep_i], id=0)+ ".bgeo.sc")
-                            first_hda_in_fc.parm('loadfromdisk').set(1)
-                            first_hda_in_fc.parm("file").set(filepath)
-                            first_hda_in_fc.parm("filemethod").set(1)
-                            first_hda_in_fc.parm("trange").set(0)
-                            file_caches.append(first_hda_in_fc)
+                    # FIXME this is a big hardcoded situation, we need to find a better way to do this
+                    # The problem with this is, this lines of codes makes the dependency system obsolete
+                    # We need to find a way to make this work with the dependency system. for example,
+                    # if we wanted to make the multiple object have another input dependency we simply cant
+                    if style is not None:
 
-                        for input_i, fc in enumerate(file_caches):
-                            first_hda.setInput(input_i, fc, 0)
+                        # We need to merge our data hdas
+                        data_obj_ids = obj["needed_data_for_multiple_objs"]
+
+                        cur.execute(GET_OBJECTS_BY_IDS, (tuple(data_obj_ids),))
+                        data_objs = cur.fetchall()
+
+                        data_obj_cache_paths = []
+                        for data_obj in data_objs:
+                            data_obj_name = data_obj["obj_name"]
+                            # Get the path of the data object cache
+                            data_obj_cache_path = str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=data_obj_name, project_id=project_id, work_id=work_id, Out="0", id=0) + ".bgeo.sc")
+                            data_obj_cache_paths.append(data_obj_cache_path)
+
+                        first_hda_in_fc = hougeo.createNode("filemerge")
+                        first_hda_in_fc.parm("files").set(len(data_obj_cache_paths))
+
+                        for data_obj_i, data_obj_cache_path in enumerate(data_obj_cache_paths, start=1):
+                            first_hda_in_fc.parm("filelist" + str(data_obj_i)).set(data_obj_cache_path)
+
+                        first_hda.setInput(0, first_hda_in_fc)
+
+                    # Here we place the filecaches needed for the dependencies
+                    else:
+                        if dependent_objs_ids and dependent_objs_outs:
+                            # We have dependencies
+                            file_caches = []
+                            for dep_i, dep_id in enumerate(dependent_objs_ids):
+                                cur.execute(GET_OBJECT_BY_ID, (dep_id,))
+                                dep_obj = cur.fetchone()
+
+                                # Place the filecache
+                                first_hda_in_fc = hougeo.createNode("filecache")
+
+                                if dep_id == -1:
+                                    # TODO make the house part more generic
+                                    filepath = str(MERGE_PATH.format(project_id=project_id, version=version, structure="House") + f"/Merged_{project_id}_{work_id}_{version}.bgeo.sc")
+                                else:
+                                    filepath = str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=dep_obj["obj_name"], project_id=project_id, work_id=work_id, Out=dependent_objs_outs[dep_i], id=0)+ ".bgeo.sc")
+                                first_hda_in_fc.parm('loadfromdisk').set(1)
+                                first_hda_in_fc.parm("file").set(filepath)
+                                first_hda_in_fc.parm("filemethod").set(1)
+                                first_hda_in_fc.parm("trange").set(0)
+                                file_caches.append(first_hda_in_fc)
+
+                            for input_i, fc in enumerate(file_caches):
+                                first_hda.setInput(input_i, fc, 0)
 
                 # Connect our previous layer's last hda to our layer's first hda
                 if i != 0 and j == 0:
@@ -285,7 +318,6 @@ def set_hda_parms(hda, db_hda, seed, obj_name=None, style=None, prediction={}):
                         runhda_logger.warn("There are no min attributes in the geometry")
 
                     # Try overrideng the maximum value
-
                     try:
                         if hda.geometry().findGlobalAttrib(parm+"_max") is not None:
                             parmmaxes[parmi] = hda.geometry().attribValue(parm+"_max")
@@ -340,8 +372,14 @@ def check_get_styles(obj, hda):
                     panel = panels[spi]
                     temp.add((style, panel))
 
+                runhda_logger.info(f"Found {len(temp)} styles for {multiple['obj_name']}")
 
-                all_styles[multiple["obj_name"]] = temp
+                if multiple["obj_name"] not in all_styles.keys():
+                    all_styles[multiple["obj_name"]] = temp
+                else:
+                    all_styles[multiple["obj_name"]].update(temp)
+
+                runhda_logger.info(f"Styles for {multiple['obj_name']}: {all_styles[multiple['obj_name']]}")
 
 def create_placer(project_id, work_id, version, parent_structure, object_name, file_count):
     hou.hipFile.clear(suppress_save_prompt=1)
