@@ -563,7 +563,7 @@ class CapoomServer():
        
     
     def handle_jobs(self, socket, cmd):
-        
+          
         if cmd.data["error_count"] > 9:
             logger.critical("Command failed 10 times, removing it")
             # self.rem_cmds(cmd, JobStatus.FAILED.value)
@@ -578,6 +578,13 @@ class CapoomServer():
                 self.remove_sock(socket, "Client disconnected during work")
                 
                 return
+    
+        elif sock_uuid not in self.all_ranks.keys():
+            logger.error(f"Client with uuid {sock_uuid} not found")
+            self.remove_sock(socket, "Client not found")
+            
+            return
+
         elif self.all_ranks[sock_uuid] == ClientRanks.ADMIN.value:
             return
         
