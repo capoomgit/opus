@@ -376,10 +376,11 @@ def switch_quick_material_resulotions():
                                 "principledshader_baseNormal_texture_1", 
                                 "principledshader_rough_texture_1", 
                                 "principledshader_metallic_texture_1"]
-        
+
         for parm in quick_material_parms:
             #get the current texture path
             texture_path = node.parm(parm).eval()
+
             #find the current resolution
             if "1k" in texture_path:
                 current = "1k"
@@ -393,13 +394,6 @@ def switch_quick_material_resulotions():
                 current = "2K"
             elif "4K" in texture_path:
                 current = "4K"
-            else:
-                # if the texture path does not contain any resolution, skip the texture path
-                # show a message box with the texture path
-
-                hou.ui.displayMessage("The texture path does not contain any resolution: {}".format(texture_path)) 
-                
-                return
 
             # detect lower case and upper case
             if current.islower():
