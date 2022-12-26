@@ -40,6 +40,16 @@ GET_JOB = """SELECT * FROM "Jobs" WHERE job_uuid = %s"""
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 
+# -*- coding: utf-8 -*-
+
+################################################################################
+## Form generated from reading UI file 'adminclientAGeaRr.ui'
+##
+## Created by: Qt User Interface Compiler version 6.3.2
+##
+## WARNING! All changes made in this file will be lost when recompiling UI file!
+################################################################################
+
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
     QSize, QTime, QUrl, Qt)
@@ -525,34 +535,27 @@ class Ui_MainWindow(object):
         self.hda_params.setObjectName(u"hda_params")
         self.verticalLayoutWidget_7 = QWidget(self.hda_params)
         self.verticalLayoutWidget_7.setObjectName(u"verticalLayoutWidget_7")
-        self.verticalLayoutWidget_7.setGeometry(QRect(360, 540, 160, 76))
+        self.verticalLayoutWidget_7.setGeometry(QRect(880, 530, 141, 91))
         self.verticalLayout_6 = QVBoxLayout(self.verticalLayoutWidget_7)
+        self.verticalLayout_6.setSpacing(0)
         self.verticalLayout_6.setObjectName(u"verticalLayout_6")
         self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
-        self.saved_templates = QLabel(self.verticalLayoutWidget_7)
-        self.saved_templates.setObjectName(u"saved_templates")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-        sizePolicy2.setHorizontalStretch(0)
-        sizePolicy2.setVerticalStretch(0)
-        sizePolicy2.setHeightForWidth(self.saved_templates.sizePolicy().hasHeightForWidth())
-        self.saved_templates.setSizePolicy(sizePolicy2)
-        self.saved_templates.setAlignment(Qt.AlignCenter)
+        self.button_new_template = QPushButton(self.verticalLayoutWidget_7)
+        self.button_new_template.setObjectName(u"button_new_template")
 
-        self.verticalLayout_6.addWidget(self.saved_templates)
-
-        self.comboBox = QComboBox(self.verticalLayoutWidget_7)
-        self.comboBox.setObjectName(u"comboBox")
-
-        self.verticalLayout_6.addWidget(self.comboBox)
+        self.verticalLayout_6.addWidget(self.button_new_template)
 
         self.button_load_template = QPushButton(self.verticalLayoutWidget_7)
         self.button_load_template.setObjectName(u"button_load_template")
 
         self.verticalLayout_6.addWidget(self.button_load_template)
 
-        self.button_save_template = QPushButton(self.hda_params)
+        self.button_save_template = QPushButton(self.verticalLayoutWidget_7)
         self.button_save_template.setObjectName(u"button_save_template")
-        self.button_save_template.setGeometry(QRect(930, 590, 91, 21))
+        self.button_save_template.setStyleSheet(u"font-weight:bold; color: green;")
+
+        self.verticalLayout_6.addWidget(self.button_save_template)
+
         self.horizontalLayoutWidget_3 = QWidget(self.hda_params)
         self.horizontalLayoutWidget_3.setObjectName(u"horizontalLayoutWidget_3")
         self.horizontalLayoutWidget_3.setGeometry(QRect(10, 110, 311, 501))
@@ -622,11 +625,11 @@ class Ui_MainWindow(object):
         self.label = QLabel(self.verticalLayoutWidget_2)
         self.label.setObjectName(u"label")
         self.label.setEnabled(True)
-        sizePolicy3 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
-        sizePolicy3.setHorizontalStretch(0)
-        sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
-        self.label.setSizePolicy(sizePolicy3)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
+        self.label.setSizePolicy(sizePolicy2)
         self.label.setMinimumSize(QSize(0, 16))
         self.label.setAlignment(Qt.AlignHCenter|Qt.AlignTop)
         self.label.setWordWrap(True)
@@ -761,7 +764,7 @@ class Ui_MainWindow(object):
         self.button_refreshjobs.setText(QCoreApplication.translate("MainWindow", u"Refresh Jobslist", None))
         self.button_clearhistory.setText(QCoreApplication.translate("MainWindow", u"Clear History", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.jobs), QCoreApplication.translate("MainWindow", u"Jobs", None))
-        self.saved_templates.setText(QCoreApplication.translate("MainWindow", u"Saved Templates", None))
+        self.button_new_template.setText(QCoreApplication.translate("MainWindow", u"Create New Template", None))
         self.button_load_template.setText(QCoreApplication.translate("MainWindow", u"Load Template", None))
         self.button_save_template.setText(QCoreApplication.translate("MainWindow", u"Save Template", None))
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"Components and HDA's", None))
@@ -779,8 +782,6 @@ class Ui_MainWindow(object):
         self.label_stat.setText(QCoreApplication.translate("MainWindow", u"Error", None))
         self.menuSettings.setTitle(QCoreApplication.translate("MainWindow", u"Settings", None))
     # retranslateUi
-
-
 
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
@@ -826,6 +827,8 @@ class Ui_MainWindow(object):
         self.c_dnd = QColor(187, 100, 100)
         self.c_offline = QColor(100, 110, 120)
 
+        self.template = {}
+
     def init_button_actions(self):
         # Exit
         app.aboutToQuit.connect(self.exit)
@@ -838,10 +841,15 @@ class Ui_MainWindow(object):
         self.button_refresh.clicked.connect(self.get_clients_from_server)
         self.button_backupdb.clicked.connect(self.backup_database)
         # Commands Tab
-        self.button_createhouse.clicked.connect(self.create_house)
+        self.button_createhouse.clicked.connect(self.create)
         self.button_render.clicked.connect(self.render)
         self.label_prioval.setText("50")
         self.slider_priority.valueChanged.connect(self.label_prioval.setNum)
+        # Commands Tab Validators
+        self.input_projectid.setValidator(QIntValidator())
+        self.input_frame.setValidator(QIntValidator())
+        self.input_count.setValidator(QIntValidator())
+
         # self.button_stopall.clicked.connect(self.stop_all_jobs)
         self.button_cancel.clicked.connect(self.cancel_job)
         self.button_updateworkers.clicked.connect(self.send_new_workers)
@@ -861,10 +869,13 @@ class Ui_MainWindow(object):
         self.input_structure_2.currentTextChanged.connect(self.components.init_model)
         self.input_hda_search.textChanged.connect(self.components.search)
 
-        # Make these inputs only accept numbers
-        self.input_projectid.setValidator(QIntValidator())
-        self.input_frame.setValidator(QIntValidator())
-        self.input_count.setValidator(QIntValidator())
+        # Parm Buttons
+
+        self.button_load_template.clicked.connect(lambda: self.parm_settings.save_or_load_template(intent="load"))
+        self.button_save_template.clicked.connect(lambda: self.parm_settings.save_or_load_template(intent="save"))
+        self.button_new_template.clicked.connect(lambda: self.parm_settings.create_new_template())
+
+
 
     def init_database(self):
         credentials = get_credentials()
@@ -908,8 +919,7 @@ class Ui_MainWindow(object):
     def init_parm_settings(self):
         self.parm_settings = ParmView(self.db_conn, self.db_cur, self)
         self.parmLayout.addLayout(self.parm_settings)
-        self.button_load_template.clicked.connect(lambda: self.parm_settings.save_or_load_template(intent="load"))
-        self.button_save_template.clicked.connect(lambda: self.parm_settings.save_or_load_template(intent="save"))
+
     def init_client_list_view(self):
         self.list_clients.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.list_clients.itemClicked.connect(self.cl_list_selection_behaviour)
@@ -1090,7 +1100,7 @@ class Ui_MainWindow(object):
                     item.setCheckState(Qt.Unchecked)
 
 
-    def create_house(self):
+    def create(self):
 
         if not self.omni_settings:
             try:
@@ -1196,7 +1206,8 @@ class Ui_MainWindow(object):
                                         self.input_version.text(),
                                         starting_state,
                                         self.socket_name,
-                                        self.slider_priority.value())
+                                        self.slider_priority.value(),
+                                        self.template)
     def render(self):
 
         all_data = {}

@@ -16,8 +16,6 @@ class ParmView(QVBoxLayout):
         self.db_conn = db_conn
         self.main = main
 
-        self.displayed_params = []
-
         # Layouts
         self.hda_version_layout = None
         self.hda_parms_list_view = None
@@ -80,8 +78,8 @@ class ParmView(QVBoxLayout):
             self.hda_version_layout = QVBoxLayout()
 
             self.hda_version_layout.addWidget(QLabel("Selected Version:"))
-            self.combobox = QComboBox()
-            self.hda_version_layout.addWidget(self.combobox)
+            self.version_combobox = QComboBox()
+            self.hda_version_layout.addWidget(self.version_combobox)
 
             self.update_used_version_button = QPushButton("Update Version")
             self.hda_version_layout.addWidget(self.update_used_version_button)
@@ -122,12 +120,11 @@ class ParmView(QVBoxLayout):
             self.db_cur.execute("""SELECT * FROM "Hdas" WHERE hda_name = %s""", (hda_name,))
             hdas = self.db_cur.fetchall()
             hda_versions = [str(hda["hda_version"]) for hda in hdas]
-            self.combobox.addItems(hda_versions)
+            self.version_combobox.addItems(hda_versions)
             self.initialize_parameter_list(id, hdas[0]["hda_version"])
 
     def initialize_parameter_list(self, hda_id, hda_version):
         """ This creates a list that shows all the parameters on the selected version of the HDA"""
-
 
         self.db_cur.execute("""SELECT * FROM "Parameters" WHERE hda_id = %s AND hda_version = %s""", (hda_id, hda_version))
         db_parms = self.db_cur.fetchall()
@@ -149,7 +146,7 @@ class ParmView(QVBoxLayout):
         self.hda_parms_list_view.setFixedWidth(200)
         self.hda_parms_list_view.setFixedHeight(130)
         self.init_parm_random_rule_list()
-        self.hda_parms_list_view.clicked.connect(lambda: self.create_parm_ui(db_parms[0]["parm_id"], self.parm_random_rule_list.selectedIndexes()))
+        self.hda_parms_list_view.clicked.connect(lambda: self.create_parm_ui(db_parms[0]["parm_id"], [x.row() for x in self.parm_random_rule_list.selectedIndexes()]))
 
         # Enable selection of multiple rows
         self.hda_parms_list_view.setSelectionMode(QAbstractItemView.ExtendedSelection)
@@ -184,7 +181,6 @@ class ParmView(QVBoxLayout):
                 self.parm_values_layout.removeItem(self.parm_values_layout.itemAt(i))
                 i -= 1
 
-        print("Selected Rule", sel_rule)
         if sel_rule == None or len(sel_rule) == 0:
             self.db_cur.execute("""SELECT * FROM "Parameters" WHERE parm_id = %s""", (parm_id,))
             db_parms = self.db_cur.fetchall()
@@ -211,11 +207,15 @@ class ParmView(QVBoxLayout):
             weight = 100
         else:
 
-            selected_item_index = self.main.components.tree_view.selectedIndexes()[0].row()
-            selected_item_text = self.main.components.tree_model.item(selected_item_index).text()
+            selected_item_index = self.main.components.tree_view.selectedIndexes()[0]
+
+            selected_item_text = selected_item_index.data()
+            selected_item_type = selected_item_index.siblingAtColumn(2).data()
+            save_name = selected_item_type + "_" + selected_item_text
 
             # Get the parameter name
-            parm_name = self.hda_parms_list_model.item(sel_rows[0].row()).text()
+            parm_name = self.parm_random_rule_list.selectedIndexes()[0].parent().data()
+            print("Parm name is",parm_name)
 
             print("Selected Item Text", selected_item_text)
             print("Selected Parm Name", parm_name)
@@ -224,16 +224,13 @@ class ParmView(QVBoxLayout):
 
             # FIXME This should be a fucking sin
             # TODO Refactor the whole system to be in database or at least an ini file
-            print("sit",self.new_rules[selected_item_text])
-            print("pn",self.new_rules[selected_item_text][parm_name])
-            print("sr[0]",self.new_rules[selected_item_text][parm_name][sel_rule[0]])
-            parm_min_value = self.new_rules[selected_item_text][parm_name][sel_rule[0]][0][0]
-            parm_max_value = self.new_rules[selected_item_text][parm_name][sel_rule[0]][0][1]
-            parm_default_value = self.new_rules[selected_item_text][parm_name][sel_rule[0]][0][2]
-            parm_override_mode = self.new_rules[selected_item_text][parm_name][sel_rule[0]][0][3]
-            parm_type = self.new_rules[selected_item_text][parm_name][sel_rule[0]][0][4]
+            parm_min_value = self.new_rules[save_name][parm_name][sel_rule[0]][0][0]
+            parm_max_value = self.new_rules[save_name][parm_name][sel_rule[0]][0][1]
+            parm_default_value = self.new_rules[save_name][parm_name][sel_rule[0]][0][2]
+            parm_override_mode = self.new_rules[save_name][parm_name][sel_rule[0]][0][3]
+            parm_type = self.new_rules[save_name][parm_name][sel_rule[0]][0][4]
 
-            weight = self.new_rules[selected_item_text][parm_name][sel_rule[0]][1]
+            weight = self.new_rules[save_name][parm_name][sel_rule[0]][1]
             parm_names = [parm_name]
 
         # Add a layout that contains the parameter name,
@@ -252,13 +249,16 @@ class ParmView(QVBoxLayout):
         parm_default_label = QLabel("Default")
         parm_override_mode_label = QLabel("Override Mode")
         parm_type_label = QLabel("Type")
+        weight_label = QLabel("Weight")
+
         # Make the font size bigger in labels
+        parm_name_label.setStyleSheet("font-size: 16px; font-weight: bold;")
         parm_min_label.setStyleSheet("font-size: 14px;")
         parm_max_label.setStyleSheet("font-size: 14px;")
         parm_default_label.setStyleSheet("font-size: 14px;")
         parm_override_mode_label.setStyleSheet("font-size: 14px;")
         parm_type_label.setStyleSheet("font-size: 14px;")
-        parm_name_label.setStyleSheet("font-size: 16px; font-weight: bold;")
+        weight_label.setStyleSheet("font-size: 14px;")
 
 
         parm_min_value_lineedit = QLineEdit(str(parm_min_value))
@@ -308,6 +308,8 @@ class ParmView(QVBoxLayout):
         self.parm_values_layout.addWidget(parm_type_combobox)
         self.parm_values_layout.addSpacerItem(QSpacerItem(0, spacing * 1.5, QSizePolicy.Expanding, QSizePolicy.Minimum))
 
+        self.parm_values_layout.addWidget(weight_label)
+        self.parm_values_layout.addSpacerItem(QSpacerItem(0, spacing, QSizePolicy.Expanding, QSizePolicy.Minimum))
 
         self.parm_weight_lineedit = QLineEdit(str(weight))
         self.parm_weight_lineedit.setFixedWidth(50)
@@ -383,16 +385,21 @@ class ParmView(QVBoxLayout):
             for parm_name in parm_names:
 
                 # Add the new rule to the list
-                selected_item_index = self.main.components.tree_view.selectedIndexes()[0].row()
-                selected_item_text = self.main.components.tree_model.item(selected_item_index).text()
-                print("Selected item text", selected_item_text)
+                selected_item_index = self.main.components.tree_view.selectedIndexes()[0]
+                selected_item_text = selected_item_index.data()
+                selected_item_type = selected_item_index.siblingAtColumn(2).data()
+                save_name = selected_item_type + "_" + selected_item_text
+
+                selected_version = self.version_combobox.currentText()
+                # TODO: This is dangerous, fix it
+                selected_version = float(selected_version)
+
                 parm_values = []
                 for i in range(self.parm_values_layout.count()):
                     # Get the line edits values
                     if self.parm_values_layout.itemAt(i).widget() is not None:
                         # Get the name of the widget
                         widget_name = self.parm_values_layout.itemAt(i).widget().objectName()
-                        print("Widget name", widget_name)
 
                         if widget_name == "parm_min_value_lineedit":
                             parm_values.append(self.parm_values_layout.itemAt(i).widget().text())
@@ -414,16 +421,19 @@ class ParmView(QVBoxLayout):
 
 
                 try:
-                    if not isinstance(self.new_rules[selected_item_text][parm_name], list):
-                        self.new_rules[selected_item_text][parm_name] = []
+                    if not isinstance(self.new_rules[save_name][parm_name], list):
+                        self.new_rules[save_name][parm_name] = []
                 except KeyError:
-                    if selected_item_text not in self.new_rules:
-                        self.new_rules[selected_item_text] = {}
+                    if save_name not in self.new_rules:
+                        self.new_rules[save_name] = {}
 
-                    if parm_name not in self.new_rules[selected_item_text]:
-                        self.new_rules[selected_item_text][parm_name] = []
-                self.new_rules[selected_item_text][parm_name].append([parm_values, parm_weight])
-                print("New rule added to hda", selected_item_text, "with name", parm_name, "value", parm_values, "with weight", parm_weight)
+                    if parm_name not in self.new_rules[save_name]:
+                        self.new_rules[save_name][parm_name] = []
+
+                self.new_rules[save_name + ".version"] = selected_version
+                self.new_rules[save_name][parm_name].append([parm_values, parm_weight])
+
+                print("New rule added to hda", save_name, "with parm", parm_name, "value", parm_values, "with weight", parm_weight)
             self.refresh_random_rule_list()
 
 
@@ -432,21 +442,44 @@ class ParmView(QVBoxLayout):
         # Clear the model
         self.parm_random_rule_list.model().clear()
 
-        selected_item_index = self.main.components.tree_view.selectedIndexes()[0].row()
-        selected_item_text = self.main.components.tree_model.item(selected_item_index).text()
 
-        print("ALL RULES FOR", selected_item_text, ":", self.new_rules[selected_item_text])
 
-        for i, parm in enumerate(self.new_rules[selected_item_text]):
+
+        selected_item_index = self.main.components.tree_view.selectedIndexes()[0]
+        # Get the second column data of selected_item_index
+
+
+        selected_item_text = selected_item_index.data()
+        selected_item_type = selected_item_index.siblingAtColumn(2).data()
+        save_name = selected_item_type + "_" + selected_item_text
+
+        if save_name not in self.new_rules:
+            return
+
+        if save_name + ".version" not in self.new_rules:
+            return
+
+        # FIXME this needs to look at hda values not layer values, and it needs to save them like that as well
+        parm_index = 0
+        for parm in self.new_rules[save_name]:
+            # TODO this is definitely not the best way to do this
+            if parm == "version":
+                continue
+
+            print("Adding the parent parm", parm, "to the model")
             self.parm_random_rule_list.model().appendRow(QStandardItem(parm))
+            # Get the last item in the model
 
-            for j, rule in enumerate(self.new_rules[selected_item_text][parm], start=1):
+            parent = self.parm_random_rule_list.model().item(parm_index)
+            parm_index += 1
+            for j, rule in enumerate(self.new_rules[save_name][parm], start=1):
+                print("Adding the rule", rule, "to the parent", parent)
+                # print("parm", parm, "rule", rule, "parmindex", parmindex, "j", j)
                 # Get the parm item from the model
-                parent = self.parm_random_rule_list.model().item(i)
 
-                # TODO display the weight in column
                 parent.appendRow(QStandardItem("Rule {}".format(j)))
 
+        self.version_combobox.setCurrentText(str(self.new_rules[save_name + ".version"]))
 
     def save_or_load_template(self, intent=None):
         new_file_dialog = QFileDialog()
@@ -497,17 +530,25 @@ class ParmView(QVBoxLayout):
                 self.refresh_random_rule_list()
             except Exception:
                 pass
+
+    def create_new_template(self):
+        # TODO: check if the user has unsaved changes
+        self.new_rules = {}
+        self.refresh_random_rule_list()
+
     # This is 10x better to store in a database with seperate tables
+    # TODO raise an error if the json is not valid with dialogue messages
     def validate_template(self, file_path):
+        return True
         with open(file_path, "r") as f:
             data = json.load(f)
 
         for key, value in data.items():
 
             # Check if the key is either a component, a path or a hda in the database
-            if not self.main.components.tree_model.findItems(key):
-                print("Key is not a component or a path")
-                return False
+            # if not self.main.components.tree_model.findItems(key):
+                # print("Key is not a component or a path")
+                # return False
 
             for parm, rules in value.items():
                 print("parm", parm)
