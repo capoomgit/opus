@@ -33,7 +33,7 @@ GET_COMPS_BY_ID = """SELECT * FROM "Components" WHERE component_id = %s"""
 GET_PATHS_BY_ID = """SELECT * FROM "Paths" WHERE path_id = %s"""
 GET_HDA_BY_ID = """SELECT * FROM "Hdas" WHERE hda_id = %s"""
 GET_MULTIPLE_OBJECTS ="""SELECT * FROM "Objects" WHERE needed_data_for_multiple_objs NOTNULL"""
-GET_HDA_PARMS = """ SELECT * FROM "Parms" WHERE hda_id = %s"""
+GET_HDA_PARMS = """ SELECT * FROM "Parameters" WHERE hda_id = %s"""
 
 # Passing the logger from slave to here
 runhda_logger = None
@@ -42,7 +42,7 @@ def init_logger(logger):
     runhda_logger = logger
     runhda_logger.info("Runhda logger initialized")
 
-def create_structure(structname, project_id, work_id, version):
+def create_structure(structname, project_id, work_id, version, parm_template={}):
     # Format XXXX
     version = str(version).zfill(4)
 
@@ -65,12 +65,12 @@ def create_structure(structname, project_id, work_id, version):
             runhda_logger.info(f'Creating object {obj["obj_name"]} with {len(obj_styles)} styles')
             for style_counter, obj_style in enumerate(obj_styles):
                 runhda_logger.info(f'Creating object {obj["obj_name"]} with style {obj_style}')
-                result = create_object(obj_id, project_id, work_id, version, parent_structure=structname, style=obj_style, id=style_counter)
+                result = create_object(obj_id, project_id, work_id, version, parent_structure=structname, style=obj_style, id=style_counter, parm_template=parm_template)
                 obj_creation_results.append(result)
 
             create_placer(project_id, work_id, version, structname, obj["obj_name"], len(obj_styles))
         else:
-            result = create_object(obj_id, project_id, work_id, version, parent_structure=structname)
+            result = create_object(obj_id, project_id, work_id, version, parent_structure=structname, parm_template=parm_template)
             obj_creation_results.append(result)
 
     merge_objects_of_structure(project_id, work_id, version, parent_structure=structname)
@@ -87,7 +87,7 @@ def create_structure(structname, project_id, work_id, version):
 # TODO handle the save path errors that raises when we dont have a parent structure
 
 def create_object(obj_id, project_id, work_id, version, parent_structure="Standalone", style=None, id=0, prediction_parms={}, parm_template={}):
-    try:
+    # try:
         cur.execute(GET_OBJECT_BY_ID, (obj_id,))
         obj = cur.fetchone()
         runhda_logger.info(f'Creating object {obj["obj_name"]}')
@@ -213,7 +213,11 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
                 if i != 0 and j == 0:
                     hda.setInput(0, previous_layer_last_hda, 0)
                 if j == len(sel_path["hda_ids"]) - 1:
-                    previous_layer_last_hda = hda
+                    mat_path_node = assign_materials(obj["obj_name"], hougeo, hda)
+                    if mat_path_node is not None:
+                        previous_layer_last_hda = mat_path_node
+                    else:
+                        previous_layer_last_hda = hda
 
                 # This sets the hda data
                 if style is not None:
@@ -254,9 +258,9 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
             json.dump(obj_parms, f, indent=4)
         return True
 
-    except Exception as e:
-        hou.hipFile.save(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + "Errors/" + CACHE_NAME.format(Object=obj["obj_name"], project_id=project_id, work_id=work_id, Out="0", id=id) + ".hiplc"))
-        return False
+    # except Exception as e:
+    #     hou.hipFile.save(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + "Errors/" + CACHE_NAME.format(Object=obj["obj_name"], project_id=project_id, work_id=work_id, Out="0", id=id) + ".hiplc"))
+    #     return False
 
 
 def cast_parm(val, parmtype : str):
@@ -267,6 +271,7 @@ def cast_parm(val, parmtype : str):
         elif parmtype.lower() == "int":
             return int(val)
     except Exception as e:
+        runhda_logger.error(f"Could not cast {val} to {parmtype}")
         return e
 
 
@@ -282,7 +287,7 @@ def place_hda(db_hda, hougeo, parm_template={}):
         runhda_logger.warn("Version not selected! Using the latest version of the hda")
         selected_parm = get_hdaparms_highest_version(db_hda["hda_id"])
         hda_ver = selected_parm["hda_version"]
-
+        runhda_logger.warn(f"Selected version of {hda_name} is {hda_ver}")
     # TODO seperation of branches
     hda_path = None
     if hda_ver:
@@ -294,12 +299,12 @@ def place_hda(db_hda, hougeo, parm_template={}):
     return hda
 
 def set_hda_parms(hda, db_hda, seed, obj_name=None, style=None, prediction={}, parm_template={}):
-
+    runhda_logger.warn("Setting hda parms")
     # TODO Check if we really need this. we shouldn't
     if db_hda["hda_name"] == "Null":
         return
     if db_hda["hda_name"] != "StyleCatcher":
-        parm_names, parm_mins, parm_maxes, parm_defaults, parm_override_modes, parm_types = [], [], [], [], []
+        parm_names, parm_mins, parm_maxes, parm_defaults, parm_override_modes, parm_types = [], [], [], [], [], []
 
         if parm_template:
             parm_names, parm_mins, parm_maxes, parm_defaults, parm_override_modes, parm_types = get_random_rule_hda(db_hda["hda_name"])
@@ -316,6 +321,13 @@ def set_hda_parms(hda, db_hda, seed, obj_name=None, style=None, prediction={}, p
                 parm_defaults = selected_parm["parm_default"]
                 parm_override_modes = selected_parm["parm_override"]
                 parm_types = selected_parm["parm_type"]
+        runhda_logger.warn(f"Parm names: {parm_names}")
+        runhda_logger.warn(f"Parm mins: {parm_mins}")
+        runhda_logger.warn(f"Parm maxes: {parm_maxes}")
+        runhda_logger.warn(f"Parm defaults: {parm_defaults}")
+        runhda_logger.warn(f"Parm override modes: {parm_override_modes}")
+        runhda_logger.warn(f"Parm types: {parm_types}")
+
 
         for parmi, parm in enumerate(parm_names):
             if prediction:
@@ -341,8 +353,8 @@ def set_hda_parms(hda, db_hda, seed, obj_name=None, style=None, prediction={}, p
 
                     random.seed(seed)
 
-                    overriden_min = cast_parm(parm_mins[parmi], parm_mins[parmi])
-                    overriden_max = cast_parm(parm_maxes[parmi], parm_maxes[parmi])
+                    overriden_min = cast_parm(parm_mins[parmi], parm_types[parmi])
+                    overriden_max = cast_parm(parm_maxes[parmi], parm_types[parmi])
                     overriden_val_rnd = cast_parm(random.uniform(overriden_min, overriden_max), parm_types[parmi])
                     try:
                         runhda_logger.info(f"Setting parameter {parm} of {hda.name()} with {overriden_val_rnd}")
@@ -509,24 +521,45 @@ def assign_materials(object_name, geo, node):
     node: node of the object \n
     Returns: Last node \n"""
     #------------------------------------#
-    import hou
-    import random
-    obj = hou.node("/obj")
-    geo = hou.node(f"{obj.path()}/geo1")
-    node = hou.node(f"{geo.path()}/Wall_Placement1")
     geom = node.geometry()
-    object_name = "Wall"
     seed = 42
-    #------------------------------------#
 
+    runhda_logger.warn(f"node is {node}")
     materials = {}
     for prim in geom.prims():
-        attr_material = prim.attribValue("material")
+        runhda_logger.warn(f"looking at prim {prim}")
+        try:
+            attr_material = prim.attribValue("material")
+        except hou.OperationFailed:
+            runhda_logger.debug("No material attribute found")
+            return node
+
         prim_num = prim.number()
         if attr_material not in materials.keys():
             random.seed(seed)
-            materials[attr_material] = (random.choice(attr_material),[])
+            materials[attr_material] = [random.choice(attr_material),[]]
         materials[attr_material][1].append(str(prim_num))
+        # FIXME This problem occurs
+        # Traceback (most recent call last):
+        #   File "C:\Users\capoom\AppData\Local\Capoom_Python39\lib\threading.py", line 950, in _bootstrap_inner
+        #     self.run()
+        #   File "C:\Program Files\Side Effects Software\Houdini 19.5.368\houdini\python3.9libs\hou.py", line 102368, in __threadRun
+        #     self.__run()
+        #   File "C:\Users\capoom\AppData\Local\Capoom_Python39\lib\threading.py", line 888, in run
+        #     self._target(*self._args, **self._kwargs)
+        #   File "P:\Private\BAM\pipeline\opus\Slave\slave.py", line 112, in run
+        #     cache_result = self.create(actual_data)
+        #   File "P:\Private\BAM\pipeline\opus\Slave\slave.py", line 215, in create
+        #     cache_result = create_structure(structure, project_id, work_id, version)
+        #   File "P:\pipeline\standalone_dev\libs\runhda_dev.py", line 73, in create_structure
+        #     result = create_object(obj_id, project_id, work_id, version, parent_structure=structname, parm_template=parm_template)
+        #   File "P:\pipeline\standalone_dev\libs\runhda_dev.py", line 216, in create_object
+        #     mat_path_node = assign_materials(obj["obj_name"], hougeo, hda)
+        #   File "P:\pipeline\standalone_dev\libs\runhda_dev.py", line 540, in assign_materials
+        #     materials[attr_material] = [random.choice(attr_material),[]]
+        #   File "C:\Users\capoom\AppData\Local\Capoom_Python39\lib\random.py", line 346, in choice
+        #     return seq[self._randbelow(len(seq))]
+        # IndexError: tuple index out of range
 
     for i,material in enumerate(materials.keys()):
         previus_node = node
@@ -544,7 +577,7 @@ def assign_materials(object_name, geo, node):
     return attribcreate
 
 def get_hdaparms_highest_version(hda_id):
-    cur.execute("SELECT * FROM hda_parms WHERE hda_id = %s", (hda_id,))
+    cur.execute(GET_HDA_PARMS, (hda_id,))
     db_parms = cur.fetchall()
     highest_version = max([parm["hda_version"] for parm in db_parms])
     selected_parm = None

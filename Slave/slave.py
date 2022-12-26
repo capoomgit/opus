@@ -47,6 +47,7 @@ class CapoomSlave(threading.Thread):
 
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.desired_status = ClientStatus.AVAILABLE.value
+        self.read_templates = {}
 
         # We store the responses we want to send here and periodically send them
         # to the server, reason why we do this is since the server is not async sometimes it misses responses
@@ -107,11 +108,11 @@ class CapoomSlave(threading.Thread):
                             cache_result, stage_result, render_result = None, None, None
 
 
-                            try:
-                                cache_result = self.create(actual_data)
-                            except Exception as e:
-                                logger.error(f"Error while creating structure: {e}")
-                                cache_result = False
+                            # try:
+                            cache_result = self.create(actual_data)
+                            # except Exception as e:
+                            # logger.error(f"Error while creating structure: {e}")
+                            # cache_result = False
                             if do_stage:
                                 stage_result = self.stage(actual_data)
                             else:
@@ -186,17 +187,35 @@ class CapoomSlave(threading.Thread):
         project_id = actual_data.data["projectid"]
         work_id = actual_data.data["workid"]
         version = actual_data.data["version"]
-        # job_uuid = actual_data.data["uuid"]
+        job_uuid = actual_data.data["uuid"]
+
+        template_path = actual_data.data["template_path"]
+
+        if template_path in self.read_templates:
+            template = self.read_templates[template_path]
+
+        else:
+            if len(self.read_templates) > 10:
+                self.read_templates = {}
+            template = self.read_template(template_path)
+
+            if template is not None:
+                self.read_templates[template_path] = template
+            else:
+                return CapoomResponse("donework",
+                                    {"result":False, "workid":work_id, "uuid":job_uuid},
+                                    f"Failed to read template {template_path}",
+                                    logginglvl=logging.ERROR)
 
         # Render settings
         logger.info(f"Creating {structure} for project {project_id} and work {work_id} for version {version}")
 
         init_creation()
-        try:
-            cache_result = create_structure(structure, project_id, work_id, version)
-        except Exception as e:
-            logger.error(f"Failed to create {structure} for project {project_id} and work {work_id} for version {version}, reason: {e}")
-            cache_result = False
+        # try:
+        cache_result = create_structure(structure, project_id, work_id, version)
+        # except Exception as e:
+        # logger.error(f"Failed to create {structure} for project {project_id} and work {work_id} for version {version}, reason: {e}")
+        cache_result = False
         return cache_result
 
         # ref_version = str(version).zfill(4)
@@ -244,7 +263,6 @@ class CapoomSlave(threading.Thread):
 
         render_engine = actual_data.data["render_engine"]
         frame_count = actual_data.data["frame_count"]
-
 
         # TODO implement other engines again
         if render_engine != "omniverse":
@@ -320,3 +338,13 @@ class CapoomSlave(threading.Thread):
     def set_desired_status(self, status):
         self.desired_status = status
         self.responses_to_send.append(CapoomResponse("status", {"status":status}, f"{socket.gethostname()} is {status}", logginglvl=logging.INFO))
+
+    def read_template(self, template_path):
+        logger.info(f"Reading template from {template_path}")
+        try:
+            with open(template_path, "r") as f:
+                template = json.load(f)
+            return template
+        except Exception as e:
+            logger.error(f"Failed to read template, reason: {e}")
+            return None

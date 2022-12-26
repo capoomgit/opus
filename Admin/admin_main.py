@@ -39,11 +39,10 @@ GET_JOB = """SELECT * FROM "Jobs" WHERE job_uuid = %s"""
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
-
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'adminclientAGeaRr.ui'
+## Form generated from reading UI file 'adminclientfYScmn.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.3.2
 ##
@@ -236,10 +235,10 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_9 = QHBoxLayout()
         self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
-        self.label_template = QLabel(self.verticalLayoutWidget_3)
-        self.label_template.setObjectName(u"label_template")
+        self.button_cmd_loadtemplate = QPushButton(self.verticalLayoutWidget_3)
+        self.button_cmd_loadtemplate.setObjectName(u"button_cmd_loadtemplate")
 
-        self.horizontalLayout_9.addWidget(self.label_template)
+        self.horizontalLayout_9.addWidget(self.button_cmd_loadtemplate)
 
         self.input_template = QComboBox(self.verticalLayoutWidget_3)
         self.input_template.setObjectName(u"input_template")
@@ -701,7 +700,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -724,7 +723,7 @@ class Ui_MainWindow(object):
         self.button_createhouse.setText(QCoreApplication.translate("MainWindow", u"Cache Houses", None))
         self.button_render.setText(QCoreApplication.translate("MainWindow", u"Render Caches", None))
         self.checkbox_startingstatus_cache.setText(QCoreApplication.translate("MainWindow", u"Immidiately start the job", None))
-        self.label_template.setText(QCoreApplication.translate("MainWindow", u"Template", None))
+        self.button_cmd_loadtemplate.setText(QCoreApplication.translate("MainWindow", u"Load Template", None))
         self.label_structure.setText(QCoreApplication.translate("MainWindow", u"Structure", None))
         self.label_8.setText(QCoreApplication.translate("MainWindow", u"Render Settings", None))
         self.label_9.setText(QCoreApplication.translate("MainWindow", u"Project Id: ", None))
@@ -827,7 +826,7 @@ class Ui_MainWindow(object):
         self.c_dnd = QColor(187, 100, 100)
         self.c_offline = QColor(100, 110, 120)
 
-        self.template = {}
+        self.template_path = None
 
     def init_button_actions(self):
         # Exit
@@ -845,6 +844,7 @@ class Ui_MainWindow(object):
         self.button_render.clicked.connect(self.render)
         self.label_prioval.setText("50")
         self.slider_priority.valueChanged.connect(self.label_prioval.setNum)
+        self.input_template.currentTextChanged.connect(self.update_template_path)
         # Commands Tab Validators
         self.input_projectid.setValidator(QIntValidator())
         self.input_frame.setValidator(QIntValidator())
@@ -861,6 +861,7 @@ class Ui_MainWindow(object):
         self.button_pause.clicked.connect(self.pause_job)
         self.button_resume.clicked.connect(self.resume_job)
 
+        self.button_cmd_loadtemplate.clicked.connect(self.load_template)
 
         # Settings Bar
         self.button_settings.triggered.connect(self.open_settings)
@@ -1195,6 +1196,10 @@ class Ui_MainWindow(object):
 
                 all_data.update(render_data)
                 all_data.update(cache_data)
+
+                if self.template_path:
+                    all_data.update({"template_path": self.template_path})
+
                 starting_state = None
                 if self.checkbox_startingstatus_cache.isChecked():
                     starting_state = JobStatus.INPROGRESS.value
@@ -1206,10 +1211,8 @@ class Ui_MainWindow(object):
                                         self.input_version.text(),
                                         starting_state,
                                         self.socket_name,
-                                        self.slider_priority.value(),
-                                        self.template)
+                                        self.slider_priority.value())
     def render(self):
-
         all_data = {}
         if not self.omni_settings:
             try:
@@ -1399,6 +1402,19 @@ class Ui_MainWindow(object):
         rusureui.set_validation(validation)
         rusurewidget.exec()
         return rusureui.res
+
+    def load_template(self):
+        path = self.parm_settings.save_or_load_template("get_path")
+        if path is not None:
+
+            if self.input_template.findText(path) == -1:
+                self.input_template.addItem(path)
+
+            self.input_template.setCurrentText(path)
+            self.template_path = path
+
+    def update_template_path(self):
+        self.template_path = self.input_template.currentText()
 
     def update(self):
         # Stuff that is visible from everywhere

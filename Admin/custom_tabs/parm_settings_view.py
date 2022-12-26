@@ -497,9 +497,10 @@ class ParmView(QVBoxLayout):
             new_file_dialog.setAcceptMode(QFileDialog.AcceptSave)
             new_file_dialog.setLabelText(QFileDialog.Accept, "Save")
 
-        elif intent == "load":
+        elif intent == "load" or intent == "get_path":
             new_file_dialog.setAcceptMode(QFileDialog.AcceptOpen)
             new_file_dialog.setLabelText(QFileDialog.Accept, "Load")
+
 
         if new_file_dialog.exec():
             file_path = new_file_dialog.selectedFiles()[0]
@@ -509,6 +510,9 @@ class ParmView(QVBoxLayout):
 
             elif intent == "load":
                 self.load_template(file_path)
+
+            elif intent == "get_path":
+                return file_path
 
     def save_template(self, file_path):
         if not file_path.endswith(".json"):
