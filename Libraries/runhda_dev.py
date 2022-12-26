@@ -448,7 +448,13 @@ def merge_objects_of_structure(project_id, work_id, version, parent_structure="S
 
     mergeout.parm("execute").pressButton()
     hou.hipFile.save(str(MERGE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + f"/Merged_{project_id}_{work_id}_{version}.hiplc"))
+    
 def assign_materials(object_name, geo, node):
+    """Assigns materials names to path of the objects based on the material attribute of the primitives \n
+    object_name: Name of the object to assign materials \n
+    geo: geo node of the object \n
+    node: node of the object \n
+    Returns: Last node \n"""
     #------------------------------------#
     import hou
     import random
@@ -459,7 +465,7 @@ def assign_materials(object_name, geo, node):
     object_name = "Wall"
     seed = 42
     #------------------------------------#
-    
+
     materials = {}
     for prim in geom.prims():
         attr_material = prim.attribValue("material")
@@ -482,6 +488,7 @@ def assign_materials(object_name, geo, node):
         attribcreate.parm("name1").set("path")
         attribcreate.parm("type1").set(3)
         attribcreate.parm("string1").set(f"/{object_name}/{materials[material][0]}/")
+    return attribcreate
 
 
 
