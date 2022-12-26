@@ -486,6 +486,49 @@ def merge_objects_of_structure(project_id, work_id, version, parent_structure="S
 
     mergeout.parm("execute").pressButton()
     hou.hipFile.save(str(MERGE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + f"/Merged_{project_id}_{work_id}_{version}.hiplc"))
+    
+def assign_materials(object_name, geo, node):
+    """Assigns materials names to path of the objects based on the material attribute of the primitives \n
+    object_name: Name of the object to assign materials \n
+    geo: geo node of the object \n
+    node: node of the object \n
+    Returns: Last node \n"""
+    #------------------------------------#
+    import hou
+    import random
+    obj = hou.node("/obj")
+    geo = hou.node(f"{obj.path()}/geo1")
+    node = hou.node(f"{geo.path()}/Wall_Placement1")
+    geom = node.geometry()
+    object_name = "Wall"
+    seed = 42
+    #------------------------------------#
+
+    materials = {}
+    for prim in geom.prims():
+        attr_material = prim.attribValue("material")
+        prim_num = prim.number()
+        if attr_material not in materials.keys():
+            random.seed(seed)
+            materials[attr_material] = (random.choice(attr_material),[])
+        materials[attr_material][1].append(str(prim_num))
+
+    for i,material in enumerate(materials.keys()):
+        previus_node = node
+        if i > 0:
+            previus_node = hou.node(f"{geo.path()}/attribcreate_{str(i-1)}")
+
+        attribcreate = geo.createNode(f"attribcreate", f"attribcreate_{str(i)}")
+        attribcreate.setInput(0, previus_node)
+        attribcreate.moveToGoodPosition()
+        prim_nums = ", ".join(materials[material][1]) 
+        attribcreate.parm("group").set(f"{prim_nums}")
+        attribcreate.parm("name1").set("path")
+        attribcreate.parm("type1").set(3)
+        attribcreate.parm("string1").set(f"/{object_name}/{materials[material][0]}/")
+    return attribcreate
+
+
 
 
 def init_creation():

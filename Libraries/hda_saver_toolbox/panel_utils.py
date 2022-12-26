@@ -344,6 +344,9 @@ def add_quick_material():
 
 def switch_quick_material_resulotions():
     """Change the resolution of the quick material nodes"""
+    selected_nodes = hou.selectedNodes()
+    if len(selected_nodes) == 0:
+        hou.ui.displayMessage("Please select a node")
 
     # show the popup window and get the selected resolution from the popup window
     default_selected = (0,)
@@ -359,9 +362,9 @@ def switch_quick_material_resulotions():
     
 
     #get all quick material nodes
-    all_nodes = hou.node("/").allSubChildren()
+    selected_nodes = hou.selectedNodes()
     quick_material_nodes = []
-    for node in all_nodes:
+    for node in selected_nodes:
         if node.type() == hou.sopNodeTypeCategory().nodeTypes()['labs::quickmaterial::2.2']:
             quick_material_nodes.append(node)
 
@@ -373,10 +376,11 @@ def switch_quick_material_resulotions():
                                 "principledshader_baseNormal_texture_1", 
                                 "principledshader_rough_texture_1", 
                                 "principledshader_metallic_texture_1"]
-        
+
         for parm in quick_material_parms:
             #get the current texture path
             texture_path = node.parm(parm).eval()
+
             #find the current resolution
             if "1k" in texture_path:
                 current = "1k"
