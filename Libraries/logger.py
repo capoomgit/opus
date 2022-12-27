@@ -17,12 +17,14 @@ class CustomFormatter(logging.Formatter):
         super().__init__()
         self.fmt = fmt
         self.FORMATS = {
-            logging.DEBUG: self.blue + self.fmt + self.reset,
+            logging.DEBUG: self.grey + self.fmt + self.reset,
             logging.INFO: self.grey + self.fmt + self.reset,
             logging.WARNING: self.yellow + self.fmt + self.reset,
+            logging.OPUS: Colors.CBLUE2.value + self.fmt + self.reset,
             logging.ERROR: self.red + self.fmt + self.reset,
             logging.CRITICAL: self.bold_red + self.fmt + self.reset,
             logging.SPACES: Colors.CGREEN2.value + self.fmt + self.reset
+
         }
 
     def format(self, record):
@@ -43,6 +45,7 @@ class CustomFormatter(logging.Formatter):
 def setup_logger(log_file):
     # SETUP LOGGING
     addLoggingLevel("SPACES", logging.CRITICAL-5, "spaces")
+    addLoggingLevel("OPUS", logging.ERROR+1, "opus")
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
 
