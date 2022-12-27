@@ -43,6 +43,7 @@ def init_logger(logger):
     runhda_logger.info("Runhda logger initialized")
 
 def create_structure(structname, project_id, work_id, version, parm_template={}):
+    parm_template={}
     # Format XXXX
     version = str(version).zfill(4)
 
@@ -255,7 +256,6 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
             out_fc.parm('filemethod').set(1)
             out_fc.parm('trange').set(0)
             out_fc.parm('file').set(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=obj["obj_name"], project_id=project_id, work_id=work_id, Out=out, id=id) + ".bgeo.sc"))
-
             if mat_path_node:
                 out_fc.setInput(0, mat_path_node, out)
             else:
@@ -289,7 +289,7 @@ def cast_parm(val, parmtype : str):
 
 def place_hda(db_hda, hougeo, parm_template={}):
     """ Places the hda in the scene """
-    hda_name = db_hda["hda_name"].lower()
+    hda_name = db_hda["hda_name"]
     hda_ver = None
     if parm_template != {}:
         if f"Hdas_{hda_name}" in parm_template:
@@ -319,10 +319,11 @@ def set_hda_parms(hda, db_hda, seed, obj_name=None, style=None, prediction={}, p
         parm_names, parm_mins, parm_maxes, parm_defaults, parm_override_modes, parm_types = [], [], [], [], [], []
 
         if parm_template:
-            parm_names, parm_mins, parm_maxes, parm_defaults, parm_override_modes, parm_types = get_random_rule_hda(parm_template, db_hda["hda_name"])
-            runhda_logger.warn(f"Parm template found for {db_hda['hda_name']}!")
+            parm_names, parm_mins, parm_maxes, parm_defaults, parm_override_modes, parm_types = get_random_rule_hda(db_hda["hda_name"])
         else:
             runhda_logger.warn("No parm template found! Using the latest version of the hda")
+
+
             selected_parm = get_hdaparms_highest_version(db_hda["hda_id"])
 
             if selected_parm:
@@ -537,17 +538,21 @@ def assign_materials(object_name, geo, node, seed):
     #------------------------------------#
     geom = node.geometry()
 
+    runhda_logger.warn(f"node is {node}")
     materials = {}
     attribcreate = None
 
     for prim in geom.prims():
+        runhda_logger.warn(f"looking at prim {prim}")
         attr_material = prim.attribValue("material")
 
 
         prim_num = prim.number()
+        runhda_logger.warn(f"attr_material list is {attr_material}")
         if attr_material not in materials.keys():
             random.seed(seed)
             sel_mat = random.choice(attr_material)
+            runhda_logger.warn(f"sel_mat is {sel_mat}")
             materials[attr_material] = [sel_mat, []]
         materials[attr_material][1].append(str(prim_num))
 
@@ -562,6 +567,7 @@ def assign_materials(object_name, geo, node, seed):
         prim_nums = ", ".join(materials[material][1])
         attribcreate.parm("group").set(f"{prim_nums}")
         attribcreate.parm("name1").set("path")
+        attribcreate.parm("class1").set(1)
         attribcreate.parm("type1").set(3)
         attribcreate.parm("string1").set(f"/{object_name}/{materials[material][0]}/")
     return attribcreate
