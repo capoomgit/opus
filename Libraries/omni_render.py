@@ -34,6 +34,42 @@ def render_with_omni(frame_count, out_config, usd_path, out_path):
     from semantics.schema.editor import PrimSemanticData
     import omni.kit.commands
     import os
+    from pxr import Sdf
+    def assign_materials():
+        stage = omni.usd.get_context().get_stage()
+        for prim in stage.Traverse():
+            if prim.GetTypeName() == "Mesh":
+
+                prim_name = prim.GetName()
+                if len(prim_name.split('_')) < 2:
+                    print(f"prim_name: {prim_name} is not a valid material name")
+                    continue
+
+                material_name =prim_name.split('_')[0]
+                material_type = prim_name.split('_')[1]
+                # print(f"material_name: {material_name} material_type: {material_type}")
+
+                #Create material reference
+                if not stage.GetPrimAtPath(f"/materials/{material_name}_{material_type}"):
+                    # print(f"Creating material reference: {material_name}_{material_type}")
+                    omni.kit.commands.execute('CreateReference',
+                        path_to=Sdf.Path(f"/materials/{material_name}_{material_type}"),
+                        asset_path=f"{self.materials_path}/{material_name}.sbsar",
+                        usd_context=omni.usd.get_context())
+
+                #Assign material
+                selected_material=stage.GetPrimAtPath(f"/materials/{material_name}_{material_type}")
+
+                while selected_material.GetTypeName() != "Material":
+                    selected_material = selected_material.GetChildren()[0]
+                print(f"selected_material: {selected_material}")
+
+
+                print(f"Assigning material: {selected_material.GetName()}")
+                omni.kit.commands.execute('BindMaterialCommand',
+                    prim_path=f"{prim.GetPath()}",
+                    material_path=f"{selected_material.GetPath()}",
+                    strength='weakerThanDescendants')
 
     def run_orchestrator():
         rep.orchestrator.run()
