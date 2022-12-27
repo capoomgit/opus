@@ -63,6 +63,9 @@ def create_toolbox():
     display_output_node = create_button("Display Output Node", panel_utils.display_output_node)
     utils_layout.addWidget(display_output_node)
 
+    cache_selected_geo_nodes = create_button("Cache Selected Geo Nodes", panel_utils.cache_selected_geo_nodes)
+    utils_layout.addWidget(cache_selected_geo_nodes)
+
     utils_widget.setLayout(utils_layout)
     tab_widget.addTab(utils_widget, "Utils")
 
