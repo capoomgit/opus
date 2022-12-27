@@ -108,7 +108,7 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
         last_layer_last_hda = None
         # First we create our layers since this process is the same if we have dependencies or not
         layer_ids = obj["component_ids"]
-        for i, layer_id in enumerate(layer_ids):
+        for layer_index, layer_id in enumerate(layer_ids):
             cur.execute(GET_COMPS_BY_ID, (layer_id,))
             layer = cur.fetchone()
 
@@ -135,11 +135,11 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
             runhda_logger.info(f"Selected paths {sel_path}")
 
 
-            for j, hda_id in enumerate(sel_path["hda_ids"]):
+            for hda_index, hda_id in enumerate(sel_path["hda_ids"]):
                 cur.execute(GET_HDA_BY_ID, (hda_id,))
                 db_hda = cur.fetchone()
 
-                seed = project_id + work_id + 5
+                seed = project_id + work_id + obj_id + 5987
 
                 hda = None
 
@@ -151,8 +151,7 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
                 else:
                     hda = place_hda(db_hda, hougeo, parm_template)
 
-
-                if i == j == 0:
+                if layer_index == hda_index == 0:
                     first_hda = hda
 
 
@@ -210,14 +209,11 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
                                 first_hda.setInput(input_i, fc, 0)
 
                 # Connect our previous layer's last hda to our layer's first hda
-                if i != 0 and j == 0:
+                if layer_index != 0 and hda_index == 0:
                     hda.setInput(0, previous_layer_last_hda, 0)
-                if j == len(sel_path["hda_ids"]) - 1:
-                    mat_path_node = assign_materials(obj["obj_name"], hougeo, hda)
-                    if mat_path_node is not None:
-                        previous_layer_last_hda = mat_path_node
-                    else:
-                        previous_layer_last_hda = hda
+
+                if hda_index == len(sel_path["hda_ids"]) - 1:
+                    previous_layer_last_hda = hda
 
                 # This sets the hda data
                 if style is not None:
@@ -225,10 +221,13 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
                 else:
                     set_hda_parms(hda, db_hda, seed, parm_template=parm_template)
 
+
                 # We need to get the required window, door etc. data from wall
                 check_get_styles(obj, hda)
 
                 last_layer_last_hda = hda
+
+
         if style is not None:
             attrs = obj["obj_name"].lower() + "Style " + obj["obj_name"].lower() + "Panel"
             attrcopy = hougeo.createNode("attribcopy")
@@ -243,12 +242,25 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
             last_layer_last_hda = pack
 
         for out in range(len(last_layer_last_hda.outputConnectors())):
+            mat_path_node = None
+            if out == 0:
+                try:
+                    mat_path_node = assign_materials(obj["obj_name"], hougeo, hda, seed)
+                except Exception as e:
+                    mat_path_node = None
+                    runhda_logger.warn(e)
+
             out_fc = hougeo.createNode('filecache')
             out_fc.moveToGoodPosition(move_inputs=False)
             out_fc.parm('filemethod').set(1)
             out_fc.parm('trange').set(0)
             out_fc.parm('file').set(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=obj["obj_name"], project_id=project_id, work_id=work_id, Out=out, id=id) + ".bgeo.sc"))
-            out_fc.setInput(0, last_layer_last_hda, out)
+
+            if mat_path_node:
+                out_fc.setInput(0, mat_path_node, out)
+            else:
+                out_fc.setInput(0, last_layer_last_hda, out)
+
             out_fc.parm('execute').pressButton()
 
         hou.hipFile.save(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=obj["obj_name"], project_id=project_id, work_id=work_id, Out="0", id=id) + ".hiplc"))
@@ -277,7 +289,7 @@ def cast_parm(val, parmtype : str):
 
 def place_hda(db_hda, hougeo, parm_template={}):
     """ Places the hda in the scene """
-    hda_name = db_hda["hda_name"]
+    hda_name = db_hda["hda_name"].lower()
     hda_ver = None
     if parm_template != {}:
         if f"Hdas_{hda_name}" in parm_template:
@@ -307,11 +319,10 @@ def set_hda_parms(hda, db_hda, seed, obj_name=None, style=None, prediction={}, p
         parm_names, parm_mins, parm_maxes, parm_defaults, parm_override_modes, parm_types = [], [], [], [], [], []
 
         if parm_template:
-            parm_names, parm_mins, parm_maxes, parm_defaults, parm_override_modes, parm_types = get_random_rule_hda(db_hda["hda_name"])
+            parm_names, parm_mins, parm_maxes, parm_defaults, parm_override_modes, parm_types = get_random_rule_hda(parm_template, db_hda["hda_name"])
+            runhda_logger.warn(f"Parm template found for {db_hda['hda_name']}!")
         else:
             runhda_logger.warn("No parm template found! Using the latest version of the hda")
-
-
             selected_parm = get_hdaparms_highest_version(db_hda["hda_id"])
 
             if selected_parm:
@@ -390,9 +401,12 @@ def check_get_styles(obj, hda):
                 lowerName = str(multiple["obj_name"].lower())
                 # combine two lists into tuple
                 temp = set()
-
-                panels = hda.geometry().attribValue(lowerName + "Panels")
-                obj_styles = hda.geometry().attribValue(lowerName + "Styles")
+                try:
+                    panels = hda.geometry().attribValue(lowerName + "Panels")
+                    obj_styles = hda.geometry().attribValue(lowerName + "Styles")
+                except Exception as e:
+                    runhda_logger.info(f"Couldn't find {lowerName}Panels or {lowerName} Styles in {hda.name()}")
+                    return
 
                 for spi in range(len(obj_styles)):
                     style = obj_styles[spi]
@@ -514,7 +528,7 @@ def merge_objects_of_structure(project_id, work_id, version, parent_structure="S
     mergeout.parm("execute").pressButton()
     hou.hipFile.save(str(MERGE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + f"/Merged_{project_id}_{work_id}_{version}.hiplc"))
 
-def assign_materials(object_name, geo, node):
+def assign_materials(object_name, geo, node, seed):
     """Assigns materials names to path of the objects based on the material attribute of the primitives \n
     object_name: Name of the object to assign materials \n
     geo: geo node of the object \n
@@ -522,44 +536,20 @@ def assign_materials(object_name, geo, node):
     Returns: Last node \n"""
     #------------------------------------#
     geom = node.geometry()
-    seed = 42
 
-    runhda_logger.warn(f"node is {node}")
     materials = {}
+    attribcreate = None
+
     for prim in geom.prims():
-        runhda_logger.warn(f"looking at prim {prim}")
-        try:
-            attr_material = prim.attribValue("material")
-        except hou.OperationFailed:
-            runhda_logger.debug("No material attribute found")
-            return node
+        attr_material = prim.attribValue("material")
+
 
         prim_num = prim.number()
         if attr_material not in materials.keys():
             random.seed(seed)
-            materials[attr_material] = [random.choice(attr_material),[]]
+            sel_mat = random.choice(attr_material)
+            materials[attr_material] = [sel_mat, []]
         materials[attr_material][1].append(str(prim_num))
-        # FIXME This problem occurs
-        # Traceback (most recent call last):
-        #   File "C:\Users\capoom\AppData\Local\Capoom_Python39\lib\threading.py", line 950, in _bootstrap_inner
-        #     self.run()
-        #   File "C:\Program Files\Side Effects Software\Houdini 19.5.368\houdini\python3.9libs\hou.py", line 102368, in __threadRun
-        #     self.__run()
-        #   File "C:\Users\capoom\AppData\Local\Capoom_Python39\lib\threading.py", line 888, in run
-        #     self._target(*self._args, **self._kwargs)
-        #   File "P:\Private\BAM\pipeline\opus\Slave\slave.py", line 112, in run
-        #     cache_result = self.create(actual_data)
-        #   File "P:\Private\BAM\pipeline\opus\Slave\slave.py", line 215, in create
-        #     cache_result = create_structure(structure, project_id, work_id, version)
-        #   File "P:\pipeline\standalone_dev\libs\runhda_dev.py", line 73, in create_structure
-        #     result = create_object(obj_id, project_id, work_id, version, parent_structure=structname, parm_template=parm_template)
-        #   File "P:\pipeline\standalone_dev\libs\runhda_dev.py", line 216, in create_object
-        #     mat_path_node = assign_materials(obj["obj_name"], hougeo, hda)
-        #   File "P:\pipeline\standalone_dev\libs\runhda_dev.py", line 540, in assign_materials
-        #     materials[attr_material] = [random.choice(attr_material),[]]
-        #   File "C:\Users\capoom\AppData\Local\Capoom_Python39\lib\random.py", line 346, in choice
-        #     return seq[self._randbelow(len(seq))]
-        # IndexError: tuple index out of range
 
     for i,material in enumerate(materials.keys()):
         previus_node = node

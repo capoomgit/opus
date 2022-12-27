@@ -1199,6 +1199,8 @@ class Ui_MainWindow(object):
 
                 if self.template_path:
                     all_data.update({"template_path": self.template_path})
+                else:
+                    all_data.update({"template_path": ""})
 
                 starting_state = None
                 if self.checkbox_startingstatus_cache.isChecked():

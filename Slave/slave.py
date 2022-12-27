@@ -183,6 +183,8 @@ class CapoomSlave(threading.Thread):
         """ Creates the structure/object from given data\n
         `actual_data` CapoomResponse object that contains needed information\n
         `return` CapoomResponse object  with result, workid and jobs uuid"""
+
+
         structure = actual_data.data["structure"]
         project_id = actual_data.data["projectid"]
         work_id = actual_data.data["workid"]
@@ -190,7 +192,10 @@ class CapoomSlave(threading.Thread):
         job_uuid = actual_data.data["uuid"]
 
         template_path = actual_data.data["template_path"]
+        cache_result = None
+        logger.info(f"Creating {structure} for project {project_id} and work {work_id} for version {version}")
 
+        init_creation()
         if template_path in self.read_templates:
             template = self.read_templates[template_path]
 
@@ -201,18 +206,18 @@ class CapoomSlave(threading.Thread):
 
             if template is not None:
                 self.read_templates[template_path] = template
+                cache_result = create_structure(structure, project_id, work_id, version, parm_template=template)
             else:
-                return CapoomResponse("donework",
-                                    {"result":False, "workid":work_id, "uuid":job_uuid},
-                                    f"Failed to read template {template_path}",
-                                    logginglvl=logging.ERROR)
+                logger.warn(f"Failed to read template {template_path}")
+                cache_result = create_structure(structure, project_id, work_id, version)
+                # return CapoomResponse("donework",
+                #                     {"result":False, "workid":work_id, "uuid":job_uuid},
+                #                     f"Failed to read template {template_path}",
+                #                     logginglvl=logging.ERROR)
 
-        # Render settings
-        logger.info(f"Creating {structure} for project {project_id} and work {work_id} for version {version}")
 
-        init_creation()
         # try:
-        cache_result = create_structure(structure, project_id, work_id, version)
+
         # except Exception as e:
         # logger.error(f"Failed to create {structure} for project {project_id} and work {work_id} for version {version}, reason: {e}")
         cache_result = False
@@ -340,6 +345,14 @@ class CapoomSlave(threading.Thread):
         self.responses_to_send.append(CapoomResponse("status", {"status":status}, f"{socket.gethostname()} is {status}", logginglvl=logging.INFO))
 
     def read_template(self, template_path):
+        if template_path == "" or template_path is None:
+            logger.error("Template path is empty")
+            return None
+
+        if not os.path.exists(template_path):
+            logger.error(f"Template file {template_path} does not exist")
+            return None
+
         logger.info(f"Reading template from {template_path}")
         try:
             with open(template_path, "r") as f:
