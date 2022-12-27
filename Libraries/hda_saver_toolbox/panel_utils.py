@@ -427,3 +427,44 @@ def clear_groups_and_attribs():
             group_delete.setInput(0, attrib_delete)
             group_delete.moveToGoodPosition(move_outputs=False,move_inputs=False, relative_to_inputs=True)
             group_delete.parm("group1").set("*")
+
+def display_output_node():
+    '''Display the output node'''
+    selected_nodes = hou.selectedNodes()
+    if len(selected_nodes) != 0:
+        # find the output node inside the selected sop node
+        for node in selected_nodes:
+            if node.type() == hou.sopNodeTypeCategory().nodeTypes()['geo']:
+                for child in node.children():
+                    if child.type() == hou.sopNodeTypeCategory().nodeTypes()['output']:
+                        # display the output node
+                        child.setCurrent(True, clear_all_selected=True)
+                        child.setDisplayFlag(True)
+                        child.setRenderFlag(True)         
+            else:
+                hou.ui.displayMessage("Please select a geo node")
+                break
+
+def create_mantra_material():
+    pass
+
+def create_dome_light_with_hdri():
+    pass
+
+def create_dome_light_with_sky():
+    pass
+
+def create_redshift_material():
+    pass
+
+def create_redshift_dome_light_with_hdri():
+    pass
+
+def create_redshift_dome_light_with_sky():
+    pass
+
+
+
+
+
+            
