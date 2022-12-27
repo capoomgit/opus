@@ -50,6 +50,7 @@ class ComponentView(QVBoxLayout):
     def update_rhs(self):
         # Get the selected item
         selected_item = self.tree_view.selectedIndexes()[0]
+        selected_id = selected_item.siblingAtColumn(1).data()
         selected_type = selected_item.siblingAtColumn(2).data()
 
         if selected_type == "Objects":
@@ -173,6 +174,7 @@ class ComponentView(QVBoxLayout):
 
         id_index = index.sibling(item.row(), 1)
         id = self.tree_model.itemFromIndex(id_index).text()
+
 
         self.main.parm_settings.init_model(id, table_name)
 

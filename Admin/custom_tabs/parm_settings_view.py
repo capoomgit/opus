@@ -70,7 +70,7 @@ class ParmView(QVBoxLayout):
 
 
 
-    def init_model(self, id, table_name):
+    def init_model(self, hda_id, table_name):
         self.clear_model()
 
         if table_name == "Hdas":
@@ -115,13 +115,12 @@ class ParmView(QVBoxLayout):
             self.addLayout(self.parm_layout)
 
             # This is a bit weird
-            self.db_cur.execute("""SELECT * FROM "Hdas" WHERE hda_id = %s""", (id,))
-            hda_name = self.db_cur.fetchone()["hda_name"]
-            self.db_cur.execute("""SELECT * FROM "Hdas" WHERE hda_name = %s""", (hda_name,))
+
+            self.db_cur.execute("""SELECT * FROM "Hdas" WHERE hda_id = %s""", (hda_id,))
             hdas = self.db_cur.fetchall()
             hda_versions = [str(hda["hda_version"]) for hda in hdas]
             self.version_combobox.addItems(hda_versions)
-            self.initialize_parameter_list(id, hdas[0]["hda_version"])
+            self.initialize_parameter_list(hda_id, hdas[0]["hda_version"])
 
     def initialize_parameter_list(self, hda_id, hda_version):
         """ This creates a list that shows all the parameters on the selected version of the HDA"""
@@ -209,15 +208,15 @@ class ParmView(QVBoxLayout):
 
             selected_item_index = self.main.components.tree_view.selectedIndexes()[0]
 
-            selected_item_text = selected_item_index.data()
+            selected_item_id = selected_item_index.siblingAtColumn(1).data()
             selected_item_type = selected_item_index.siblingAtColumn(2).data()
-            save_name = selected_item_type + "_" + selected_item_text
+            save_name = selected_item_type + "_" + selected_item_id
 
             # Get the parameter name
             parm_name = self.parm_random_rule_list.selectedIndexes()[0].parent().data()
             print("Parm name is",parm_name)
 
-            print("Selected Item Text", selected_item_text)
+            print("Selected Item Text", selected_item_id)
             print("Selected Parm Name", parm_name)
             print("Selected Rule", sel_rule[0])
 
@@ -386,9 +385,9 @@ class ParmView(QVBoxLayout):
 
                 # Add the new rule to the list
                 selected_item_index = self.main.components.tree_view.selectedIndexes()[0]
-                selected_item_text = selected_item_index.data()
+                selected_item_id = selected_item_index.siblingAtColumn(1).data()
                 selected_item_type = selected_item_index.siblingAtColumn(2).data()
-                save_name = selected_item_type + "_" + selected_item_text
+                save_name = selected_item_type + "_" + selected_item_id
 
                 selected_version = self.version_combobox.currentText()
                 # TODO: This is dangerous, fix it
@@ -449,9 +448,9 @@ class ParmView(QVBoxLayout):
         # Get the second column data of selected_item_index
 
 
-        selected_item_text = selected_item_index.data()
+        selected_item_id = selected_item_index.siblingAtColumn(1).data()
         selected_item_type = selected_item_index.siblingAtColumn(2).data()
-        save_name = selected_item_type + "_" + selected_item_text
+        save_name = selected_item_type + "_" + selected_item_id
 
         if save_name not in self.new_rules:
             return
@@ -515,6 +514,74 @@ class ParmView(QVBoxLayout):
                 return file_path
 
     def save_template(self, file_path):
+
+        # Create default rules for those that don't have any
+        # add the hdas that don't have any rules with the default rules
+        self.db_cur.execute("""SELECT * FROM "Objects" """)
+        all_objects = self.db_cur.fetchall()
+
+        for obj in all_objects:
+            if obj[0] not in self.new_rules:
+                self.new_rules[obj[0]] = {}
+
+        self.db_cur.execute("""SELECT * FROM "Hdas" """)
+        all_hdas = self.db_cur.fetchall()
+
+        for hda in all_hdas:
+            hda_id = hda["hda_id"]
+            json_savename = "Hdas_" + str(hda_id)
+
+            # Get the highest version of the hda
+            self.db_cur.execute("""SELECT * FROM "Parameters" WHERE hda_id = %s ORDER BY hda_version DESC""", (hda["hda_id"],))
+            default_parms = self.db_cur.fetchone()
+
+            if json_savename not in self.new_rules:
+                self.new_rules[json_savename] = {}
+
+                for parm in default_parms:
+                    if parm == "hda_id" or parm == "hda_version":
+                        continue
+
+                if json_savename + ".version" not in self.new_rules:
+                    self.new_rules[json_savename + ".version"] = default_parms["hda_version"]
+                else:
+                    raise Exception(f"Version found while it wasn't supposed to be found for hda {hda_id} version {hda_version}")
+
+
+                for parmi, parm_name in enumerate(default_parms["parm_name"]):
+                    self.new_rules[json_savename][parm_name] = [[[default_parms["parm_min"][parmi],
+                                                                  default_parms["parm_max"][parmi],
+                                                                  default_parms["parm_default"][parmi],
+                                                                  default_parms["parm_override"][parmi],
+                                                                  default_parms["parm_type"][parmi]], 1]]
+
+            else:
+                # check if we have rules for all parms, if not just fill them out
+                if json_savename + ".version" not in self.new_rules:
+                    raise Exception(f"Version not found for hda {hda_id}")
+                else:
+                    hda_version = self.new_rules[json_savename + ".version"]
+
+                # Get the specified version of the hda
+                self.db_cur.execute("""SELECT * FROM "Parameters" WHERE hda_id = %s AND hda_version = %s""", (hda["hda_id"], hda_version))
+                specified_version_parms = self.db_cur.fetchone()
+
+                if specified_version_parms is None:
+                    raise Exception(f"Version {hda_version} not found for hda {hda_id}")
+
+
+                for parmi, parm_name in enumerate(default_parms["parm_name"]):
+                    if parm_name not in self.new_rules[json_savename]:
+                        self.new_rules[json_savename][parm_name] = [[[specified_version_parms["parm_min"][parmi],
+                                                                      specified_version_parms["parm_max"][parmi],
+                                                                      specified_version_parms["parm_default"][parmi],
+                                                                      specified_version_parms["parm_override"][parmi],
+                                                                      specified_version_parms["parm_type"][parmi]], 1]]
+
+
+
+
+
         if not file_path.endswith(".json"):
             file_path += ".json"
 
