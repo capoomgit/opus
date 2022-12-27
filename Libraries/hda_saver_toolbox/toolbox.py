@@ -41,12 +41,12 @@ def create_toolbox():
     # Add the layout to the root widget
     export_widget.setLayout(export_layout)
     tab_widget.addTab(export_widget, "Export")
-    # Utils Layout
+
+    # ------------------ Utils ------------------
+
     utils_widget = QtWidgets.QWidget()
     utils_layout = QtWidgets.QVBoxLayout()
     utils_layout.setAlignment(QtCore.Qt.AlignTop)
-
-    # ------------------ Utils ------------------
 
     change_node_color = create_button("Change Node Color", panel_utils.change_node_color)
     utils_layout.addWidget(change_node_color)
@@ -60,8 +60,65 @@ def create_toolbox():
     switch_quick_material_resolutions = create_button("Switch Quick Material Resolutions", panel_utils.switch_quick_material_resulotions)
     utils_layout.addWidget(switch_quick_material_resolutions)
 
+    display_output_node = create_button("Display Output Node", panel_utils.display_output_node)
+    utils_layout.addWidget(display_output_node)
+
     utils_widget.setLayout(utils_layout)
     tab_widget.addTab(utils_widget, "Utils")
+
+    # ------------------ Render ------------------
+
+    render_widget = QtWidgets.QWidget()
+    render_layout = QtWidgets.QVBoxLayout()
+    render_layout.setAlignment(QtCore.Qt.AlignTop)
+
+    # create tab for redshift and mantra
+    render_tab_widget = QtWidgets.QTabWidget()
+
+    # ------------------ Mantra ------------------
+
+    mantra_widget = QtWidgets.QWidget()
+    mantra_layout = QtWidgets.QVBoxLayout()
+    mantra_layout.setAlignment(QtCore.Qt.AlignTop)
+
+
+    create_mantra_material = create_button("Create Mantra Material", panel_utils.create_mantra_material)
+    mantra_layout.addWidget(create_mantra_material)
+
+    create_dome_light_with_hdri = create_button("Create Dome Light With HDRI", panel_utils.create_dome_light_with_hdri)
+    mantra_layout.addWidget(create_dome_light_with_hdri)
+
+    create_dome_light_with_sky = create_button("Create Dome Light With Sky", panel_utils.create_dome_light_with_sky)
+    mantra_layout.addWidget(create_dome_light_with_sky)
+
+    
+    mantra_widget.setLayout(mantra_layout)
+    render_tab_widget.addTab(mantra_widget, "Mantra")
+
+    # ------------------ Redshift ------------------
+
+    redshift_widget = QtWidgets.QWidget()
+    redshift_layout = QtWidgets.QVBoxLayout()
+    redshift_layout.setAlignment(QtCore.Qt.AlignTop)
+
+
+
+    create_redshift_material = create_button("Create Redshift Material", panel_utils.create_redshift_material) 
+    redshift_layout.addWidget(create_redshift_material)
+
+    create_redshift_dome_light_with_hdri = create_button("Create Redshift Dome Light With HDRI", panel_utils.create_redshift_dome_light_with_hdri)
+    redshift_layout.addWidget(create_redshift_dome_light_with_hdri)
+
+    create_redshift_dome_light_with_sky = create_button("Create Redshift Dome Light With Sky", panel_utils.create_redshift_dome_light_with_sky)
+    redshift_layout.addWidget(create_redshift_dome_light_with_sky)
+
+    redshift_widget.setLayout(redshift_layout)
+    render_tab_widget.addTab(redshift_widget, "Redshift")
+
+    render_layout.addWidget(render_tab_widget)
+    render_widget.setLayout(render_layout)
+    tab_widget.addTab(render_widget, "Render")
+
 
     # ------------------ Development ------------------
 
@@ -80,7 +137,6 @@ def create_toolbox():
 
     development_widget.setLayout(development_layout)
     tab_widget.addTab(development_widget, "Development")
-    
 
 
     # Return the top-level widget.
