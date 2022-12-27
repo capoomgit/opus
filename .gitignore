@@ -3,3 +3,4 @@ version.txt
 credentials.json
 
 Tests/sqlJobGetter.py
+Tests/rule_tests.py

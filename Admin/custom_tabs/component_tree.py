@@ -32,12 +32,38 @@ class ComponentView(QVBoxLayout):
         self.tree_view.setColumnHidden(1, True)
         self.tree_view.setColumnHidden(2, True)
 
-        print(self.tree_view.isColumnHidden(1))
-        print(self.tree_view.isColumnHidden(2))
-
         self.addWidget(self.tree_view)
         # self.init_model()
-        self.tree_view.clicked.connect(self.update_parm_settings)
+        self.tree_view.clicked.connect(self.update_rhs)
+        # Bind the deselect signal to something
+        self.tree_view.selectionModel().selectionChanged.connect(self.deselect)
+
+
+    def deselect(self, selected, deselected):
+        # if all items are deselected, clear the parm settings
+        if not self.tree_view.selectedIndexes():
+            self.main.parm_settings.clear_model()
+
+        if selected:
+            self.update_rhs()
+    # rhs = right hand side
+    def update_rhs(self):
+        # Get the selected item
+        selected_item = self.tree_view.selectedIndexes()[0]
+        selected_type = selected_item.siblingAtColumn(2).data()
+
+        if selected_type == "Objects":
+            self.main.parm_settings.clear_model()
+            # TODO: Add the object settings
+        elif selected_type == "Components":
+            self.main.parm_settings.clear_model()
+            # TODO: Add the component and path settings
+        elif selected_type == "Paths":
+            self.main.parm_settings.clear_model()
+            # TODO figure out if you want to do something if path is selected.
+        elif selected_type == "Hdas":
+            self.main.parm_settings.clear_model()
+            self.update_parm_settings(selected_item)
 
 
     def init_model(self):
@@ -78,15 +104,18 @@ class ComponentView(QVBoxLayout):
                 path_ids = component["path_ids"]
                 self.db_cur.execute("""SELECT * FROM "Paths" WHERE path_id IN %s""", (tuple(path_ids),))
                 paths = self.db_cur.fetchall()
-
-                for path in paths:
+                for k, path in enumerate(paths):
+                    parent_component.appendRow([StandardItem("Path #{}".format(k+1),align=Qt.AlignLeft),
+                                                StandardItem(path["path_id"], align=Qt.AlignLeft),
+                                                StandardItem("Paths", align=Qt.AlignLeft)])
                     hda_ids = path["hda_ids"]
+                    parent_path = self.tree_model.item(i, 0).child(j, 0).child(k, 0)
 
                     self.db_cur.execute("""SELECT * FROM "Hdas" WHERE hda_id IN %s""", (tuple(hda_ids),))
                     hdas = self.db_cur.fetchall()
 
                     for hda in enumerate(hdas):
-                        parent_component.appendRow([StandardItem(hda[1]["hda_name"].lower().replace(" ", ""),align=Qt.AlignLeft),
+                        parent_path.appendRow([StandardItem(hda[1]["hda_name"].lower().replace(" ", ""),align=Qt.AlignLeft),
                                                     StandardItem(hda[1]["hda_id"], align=Qt.AlignLeft),
                                                     StandardItem("Hdas", align=Qt.AlignLeft)])
 
@@ -96,6 +125,7 @@ class ComponentView(QVBoxLayout):
         self.tree_view.setColumnHidden(2, True)
 
     # Delete all objects and children of those objects if any child doesn't containts the given string and highlight the text
+    # TODO check if this breaks anything while a parm rule list is displayed
     def search(self):
         text = self.main.input_hda_search.text()
         self.init_model()
@@ -129,16 +159,13 @@ class ComponentView(QVBoxLayout):
 
         # Ew but it works
         for i, to_remove in enumerate(to_remove):
-            print(self.tree_model.item(to_remove - i, 0).text())
             self.tree_model.removeRows(to_remove - i, 1)
 
 
     def update_parm_settings(self, index : QModelIndex):
         # Get the item
 
-        # print("Index is ", index.row(), "!")
         item = self.tree_model.itemFromIndex(index)
-        print("Item is ", item.text(), "!")
 
         # Get the table name from second column of the item
         table_name_index = index.sibling(item.row(), 2)
