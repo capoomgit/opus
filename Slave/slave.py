@@ -196,37 +196,25 @@ class CapoomSlave(threading.Thread):
         logger.info(f"Creating {structure} for project {project_id} and work {work_id} for version {version}")
 
         init_creation()
-        if template_path in self.read_templates:
-            template = self.read_templates[template_path]
 
-        else:
-            if len(self.read_templates) > 10:
-                self.read_templates = {}
-            template = self.read_template(template_path)
+        if len(self.read_templates) > 10:
+            self.read_templates = {}
 
-            if template is not None:
-                self.read_templates[template_path] = template
-                cache_result = create_structure(structure, project_id, work_id, version, parm_template=template)
-            else:
-                logger.warn(f"Failed to read template {template_path}")
-                cache_result = create_structure(structure, project_id, work_id, version)
-                # return CapoomResponse("donework",
-                #                     {"result":False, "workid":work_id, "uuid":job_uuid},
-                #                     f"Failed to read template {template_path}",
-                #                     logginglvl=logging.ERROR)
+        if template_path not in self.read_templates:
+            self.read_templates[template_path] = self.read_template(template_path)
+
+        try:
+            cache_result = create_structure(structure, project_id, work_id, version, parm_template=self.read_templates[template_path])
+        except Exception as e:
+            logger.error(f"Failed to create {structure} for project {project_id} and work {work_id} for version {version}, reason: {e}")
+            return CapoomResponse("donework",
+                                {"result":False, "workid":work_id, "uuid":job_uuid},
+                                f"Failed to read template {template_path}",
+                                logginglvl=logging.ERROR)
 
 
-        # try:
-
-        # except Exception as e:
-        # logger.error(f"Failed to create {structure} for project {project_id} and work {work_id} for version {version}, reason: {e}")
         cache_result = False
         return cache_result
-
-        # ref_version = str(version).zfill(4)
-        # merge_file = f"P:/pipeline/standalone_dev/saved/{structure}/Project_{project_id}_v{ref_version}/Objects/Merged/Merged_{project_id}_{work_id}_{ref_version}.bgeo.sc"
-
-        # if to_send.data["result"]:
 
 
     def stage(self, actual_data : CapoomResponse) -> bool:
@@ -347,11 +335,11 @@ class CapoomSlave(threading.Thread):
     def read_template(self, template_path):
         if template_path == "" or template_path is None:
             logger.error("Template path is empty")
-            return None
+            return {}
 
         if not os.path.exists(template_path):
             logger.error(f"Template file {template_path} does not exist")
-            return None
+            return {}
 
         logger.info(f"Reading template from {template_path}")
         try:
@@ -360,4 +348,4 @@ class CapoomSlave(threading.Thread):
             return template
         except Exception as e:
             logger.error(f"Failed to read template, reason: {e}")
-            return None
+            return {}

@@ -43,7 +43,6 @@ def init_logger(logger):
     runhda_logger.info("Runhda logger initialized")
 
 def create_structure(structname, project_id, work_id, version, parm_template={}):
-    parm_template={}
     # Format XXXX
     version = str(version).zfill(4)
 
@@ -291,12 +290,13 @@ def place_hda(db_hda, hougeo, parm_template={}):
     """ Places the hda in the scene """
     hda_name = db_hda["hda_name"]
     hda_ver = None
+    hda_id = db_hda["hda_id"]
     if parm_template != {}:
-        if f"Hdas_{hda_name}" in parm_template:
-            hda_ver = parm_template[f"Hdas_{hda_name}.version"]
+        if f"Hdas_{hda_id}" in parm_template:
+            hda_ver = parm_template[f"Hdas_{hda_id}.version"]
 
     if hda_ver is None:
-        runhda_logger.warn("Version not selected! Using the latest version of the hda")
+        runhda_logger.warn("Version not found in template! Using the latest version of the hda")
         selected_parm = get_hdaparms_highest_version(db_hda["hda_id"])
         hda_ver = selected_parm["hda_version"]
         runhda_logger.warn(f"Selected version of {hda_name} is {hda_ver}")
@@ -306,8 +306,11 @@ def place_hda(db_hda, hougeo, parm_template={}):
         hda_path = f"capoom::dev::{hda_name}::{hda_ver}"
     else:
         hda_path = f"capoom::dev::{hda_name}"
-
-    hda = hougeo.createNode(hda_path)
+    try:
+        hda = hougeo.createNode(hda_path)
+    except Exception as e:
+        runhda_logger.error(f"Could not place {hda_path}\nThis might be a template problem! Check the template for {hda_name}\nError:{e}")
+        return e
     return hda
 
 def set_hda_parms(hda, db_hda, seed, obj_name=None, style=None, prediction={}, parm_template={}):
@@ -319,7 +322,7 @@ def set_hda_parms(hda, db_hda, seed, obj_name=None, style=None, prediction={}, p
         parm_names, parm_mins, parm_maxes, parm_defaults, parm_override_modes, parm_types = [], [], [], [], [], []
 
         if parm_template:
-            parm_names, parm_mins, parm_maxes, parm_defaults, parm_override_modes, parm_types = get_random_rule_hda(db_hda["hda_name"])
+            parm_names, parm_mins, parm_maxes, parm_defaults, parm_override_modes, parm_types = get_random_rule_hda(parm_template, db_hda["hda_id"])
         else:
             runhda_logger.warn("No parm template found! Using the latest version of the hda")
 
@@ -544,8 +547,12 @@ def assign_materials(object_name, geo, node, seed):
 
     for prim in geom.prims():
         runhda_logger.warn(f"looking at prim {prim}")
-        attr_material = prim.attribValue("material")
-
+        # Check if prim has an attribute called material
+        try:
+            attr_material = prim.attribValue("material")
+        except hou.OperationFailed:
+            runhda_logger.warn(f"prim {prim} has no material attribute")
+            continue
 
         prim_num = prim.number()
         runhda_logger.warn(f"attr_material list is {attr_material}")
@@ -601,16 +608,15 @@ def get_random_rule_hda(all_rules, hda_name):
             break
     parm_names, parm_mins, parm_maxes, parm_defaults, parm_override_modes, parm_types = [], [], [], [], [], []
 
-
     for parm in parms:
         rule = pick_random_rule(parms[parm])
-        print()
         parm_names.append(parm)
         parm_mins.append(rule[0])
         parm_maxes.append(rule[1])
         parm_defaults.append(rule[2])
         parm_override_modes.append(rule[3])
         parm_types.append(rule[4])
+
     return parm_names, parm_mins, parm_maxes, parm_defaults, parm_override_modes, parm_types
 
 def init_creation():

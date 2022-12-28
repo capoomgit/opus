@@ -270,7 +270,7 @@ class ParmView(QVBoxLayout):
         parm_default_value_lineedit.setObjectName("parm_default_value_lineedit")
 
         parm_override_mode_combobox = QComboBox()
-        parm_override_mode_combobox.addItems(["Random", "Default"])
+        parm_override_mode_combobox.addItems(["Default", "Random"])
         parm_override_mode_combobox.setObjectName("parm_override_mode_combobox")
 
         parm_override_mode_combobox.setCurrentIndex(parm_override_mode)
@@ -579,14 +579,15 @@ class ParmView(QVBoxLayout):
                                                                       specified_version_parms["parm_type"][parmi]], 1]]
 
 
-
-
-
         if not file_path.endswith(".json"):
             file_path += ".json"
 
         with open(file_path, "w") as f:
             json.dump(self.new_rules, f, indent=4)
+
+        print("Saved template", file_path)
+
+        self.refresh_random_rule_list()
 
     def load_template(self, file_path):
         # Check if the json contains the correct data
