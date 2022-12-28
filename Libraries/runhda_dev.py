@@ -55,9 +55,22 @@ def create_structure(structname, project_id, work_id, version, parm_template={})
     object_ids = structure["obj_ids"]
     obj_creation_results = []
 
+    # We store the objects we skipped so we skip the children of them as well
+    global skipped_object_ids
+    skipped_object_ids = []
+    runhda_logger.opus("Skipped object ids at the start: " + str(skipped_object_ids))
+
     for obj_id in object_ids:
         cur.execute(GET_OBJECT_BY_ID, (obj_id,))
         obj = cur.fetchone()
+
+        obj_can_skip = obj["obj_can_skip"]
+        obj_skip_chance = obj["obj_skip_chance"]
+        if obj_can_skip:
+            if random.random() <= obj_skip_chance:
+                runhda_logger.info(f'Skipping object {obj["obj_name"]}')
+                skipped_object_ids.append(obj_id)
+                continue
 
         if obj in multiples:
             # We need to get rid of duplicates
@@ -96,6 +109,22 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
         # we can rename this after
         dependent_objs_ids = obj["dependent_obj_ids"]
         dependent_objs_outs = obj["dependent_obj_outs"]
+        contradictive_obj_ids = obj["contradictive_obj_ids"]
+        # We need to check if we have skipped objects in our dependencies
+        # if so, we skip this object as well
+        if dependent_objs_ids:
+            for dep_obj_id in dependent_objs_ids:
+                if dep_obj_id in skipped_object_ids:
+                    runhda_logger.opus(f'Skipping object {obj["obj_name"]} due to skipped dependency')
+                    skipped_object_ids.append(obj_id)
+                    return True
+
+        if contradictive_obj_ids:
+            for contradictive_obj_id in contradictive_obj_ids:
+                if contradictive_obj_id not in skipped_object_ids:
+                    runhda_logger.opus(f'Skipping object {obj["obj_name"]} due to contradictive dependency')
+                    skipped_object_ids.append(obj_id)
+                    return True
 
         hou.hipFile.clear(suppress_save_prompt=1)
         houobj = hou.node("/obj")
@@ -299,7 +328,7 @@ def place_hda(db_hda, hougeo, parm_template={}):
         runhda_logger.warn("Version not found in template! Using the latest version of the hda")
         selected_parm = get_hdaparms_highest_version(db_hda["hda_id"])
         hda_ver = selected_parm["hda_version"]
-        runhda_logger.warn(f"Selected version of {hda_name} is {hda_ver}")
+        runhda_logger.info(f"Selected version of {hda_name} is {hda_ver}")
     # TODO seperation of branches
     hda_path = None
     if hda_ver:
@@ -314,17 +343,18 @@ def place_hda(db_hda, hougeo, parm_template={}):
     return hda
 
 def set_hda_parms(hda, db_hda, seed, obj_name=None, style=None, prediction={}, parm_template={}):
-    runhda_logger.warn("Setting hda parms")
+    hda_name = db_hda["hda_name"]
+
     # TODO Check if we really need this. we shouldn't
-    if db_hda["hda_name"] == "Null":
+    if hda_name == "Null":
         return
-    if db_hda["hda_name"] != "StyleCatcher":
+    if hda_name != "StyleCatcher":
         parm_names, parm_mins, parm_maxes, parm_defaults, parm_override_modes, parm_types = [], [], [], [], [], []
 
         if parm_template:
             parm_names, parm_mins, parm_maxes, parm_defaults, parm_override_modes, parm_types = get_random_rule_hda(parm_template, db_hda["hda_id"])
         else:
-            runhda_logger.warn("No parm template found! Using the latest version of the hda")
+            runhda_logger.info(f"No parm template found for {hda_name}! Using the latest version of the hda")
 
 
             selected_parm = get_hdaparms_highest_version(db_hda["hda_id"])
@@ -336,12 +366,7 @@ def set_hda_parms(hda, db_hda, seed, obj_name=None, style=None, prediction={}, p
                 parm_defaults = selected_parm["parm_default"]
                 parm_override_modes = selected_parm["parm_override"]
                 parm_types = selected_parm["parm_type"]
-        runhda_logger.warn(f"Parm names: {parm_names}")
-        runhda_logger.warn(f"Parm mins: {parm_mins}")
-        runhda_logger.warn(f"Parm maxes: {parm_maxes}")
-        runhda_logger.warn(f"Parm defaults: {parm_defaults}")
-        runhda_logger.warn(f"Parm override modes: {parm_override_modes}")
-        runhda_logger.warn(f"Parm types: {parm_types}")
+
 
 
         for parmi, parm in enumerate(parm_names):
@@ -489,7 +514,12 @@ def merge_objects_of_structure(project_id, work_id, version, parent_structure="S
     for folder in os.listdir(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure)):
         cur.execute(GET_OBJECT_BY_NAME, (folder,))
         obj_from_db = cur.fetchone()
-        if obj_from_db  is not None:
+
+
+        if obj_from_db is not None:
+            if obj_from_db["obj_id"] in skipped_object_ids:
+                continue
+
             if obj_from_db["keep"] == True or obj_from_db["keep"] is None:
                 if obj_from_db["needed_data_for_multiple_objs"] is not None:
                     merge_paths.append(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=obj_from_db["obj_name"] + "_placed", project_id=project_id, work_id=work_id, Out=0, id=0) + ".bgeo.sc")
@@ -541,35 +571,32 @@ def assign_materials(object_name, geo, node, seed):
     #------------------------------------#
     geom = node.geometry()
 
-    runhda_logger.warn(f"node is {node}")
     materials = {}
     attribcreate = None
 
     for prim in geom.prims():
-        runhda_logger.warn(f"looking at prim {prim}")
+
         # Check if prim has an attribute called material
         try:
             attr_material = prim.attribValue("material")
         except hou.OperationFailed:
-            runhda_logger.warn(f"prim {prim} has no material attribute")
-            continue
+            runhda_logger.warn(f"Object {object_name} has no material attribute")
+            return node
 
         prim_num = prim.number()
-        runhda_logger.warn(f"attr_material list is {attr_material}")
         if attr_material not in materials.keys():
             random.seed(seed)
             sel_mat = random.choice(attr_material)
-            runhda_logger.warn(f"sel_mat is {sel_mat}")
             materials[attr_material] = [sel_mat, []]
         materials[attr_material][1].append(str(prim_num))
 
     for i,material in enumerate(materials.keys()):
-        previus_node = node
+        previous_node = node
         if i > 0:
-            previus_node = hou.node(f"{geo.path()}/attribcreate_{str(i-1)}")
+            previous_node = hou.node(f"{geo.path()}/attribcreate_{str(i-1)}")
 
         attribcreate = geo.createNode(f"attribcreate", f"attribcreate_{str(i)}")
-        attribcreate.setInput(0, previus_node)
+        attribcreate.setInput(0, previous_node)
         attribcreate.moveToGoodPosition()
         prim_nums = ", ".join(materials[material][1])
         attribcreate.parm("group").set(f"{prim_nums}")
@@ -603,7 +630,6 @@ def get_random_rule_hda(all_rules, hda_name):
     parms = []
     for rule in all_rules:
         if rule == f"Hdas_{hda_name}":
-            print("Found rule")
             parms = all_rules[rule]
             break
     parm_names, parm_mins, parm_maxes, parm_defaults, parm_override_modes, parm_types = [], [], [], [], [], []
