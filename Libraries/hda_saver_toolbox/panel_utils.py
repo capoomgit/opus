@@ -5,6 +5,7 @@ from database import Database, CursorFromConnectionFromPool
 from pprint import pprint
 import sys
 import os
+import re
 
 GET_LAYER_BY_NAME = """SELECT * FROM "Components" WHERE component_name = %s"""
 GET_NODE_BY_NAME = """SELECT * FROM "Hdas" WHERE hda_name = %s"""
@@ -451,21 +452,105 @@ def cache_selected_geo_nodes():
     if len(selected_nodes) != 0:
         # find the output node inside the selected sop node
         for node in selected_nodes:
-            if node.type() == hou.sopNodeTypeCategory().nodeTypes()['geo']:
+            if node.type().name() == 'geo':
                 # find output node and create a cache node and connect it to the output node
                 for child in node.children():
-                    if child.type() == hou.sopNodeTypeCategory().nodeTypes()['output']:
+                    if child.type().name() == 'output':
+                        
+                        # fin outputs node input
+                        output_node_input = child.inputs()[0]
                         # create a cache node
                         cache_node = node.createNode("filecache")
+                        child.setInput(0, cache_node)
                         cache_node.moveToGoodPosition(move_outputs=False,move_inputs=False, relative_to_inputs=True)
-                        cache_node.setInput(0, child)
+                        cache_node.setInput(0, output_node_input)
                         # set cache name to the name of the geo node
                         name = node.name()
+                        print(name)
+                        cache_node.parm("loadfromdisk").set(1)
+                        cache_node.parm("filemethod").set(1)
                         cache_node.parm("file").set("$HIP/cache/" + name + ".bgeo.sc")
+                        # only cache the first frame
+                        cache_node.parm("trange").set(0)
+                        cache_node.parm("cachesim").set(0)
                         cache_node.parm("execute").pressButton()
             else:
                 hou.ui.displayMessage("Please select a geo node")
                 break
+
+def create_object_merge_enviorment():
+    '''Create a object merge enviorment'''
+    selected_nodes = hou.selectedNodes()
+    # create a geo node named enviorment
+    enviorment = hou.node("/obj").createNode("geo", "enviorment")
+    if len(selected_nodes) != 0:
+         for node in selected_nodes:
+            if node.type().name() == 'geo':
+                # find output node and create a cache node and connect it to the output node
+                for child in node.children():
+                    if child.type().name() == 'output':
+                        # create a object merge node and name it geo node name
+                        object_merge = enviorment.createNode("object_merge", node.name())
+                        object_merge.moveToGoodPosition(move_outputs=False,move_inputs=False, relative_to_inputs=True)
+                        # set the object merge node to the selected node
+                        object_merge.parm("objpath1").set(child.path())
+                        
+                           
+def create_wedge_setup_from_switch():
+    '''Create a wedge setup from a switch node'''
+    selected_nodes = hou.selectedNodes()
+    if len(selected_nodes) == 1 and selected_nodes[0].type().name() == 'geo':
+        
+        #create top network node
+        tops = hou.node('/obj').createNode('topnet', 'wedge_setup')
+        tops.moveToGoodPosition(move_outputs=False,move_inputs=False, relative_to_inputs=True)
+        #create a wedge node in the top network node
+        wedge = tops.createNode('wedge', 'wedge')
+        wedge.moveToGoodPosition(move_outputs=False,move_inputs=False, relative_to_inputs=True)
+
+        input_counts = []
+        switch_names = []
+        # find all switch nodes inside the selected node
+        for child in selected_nodes[0].children():
+            if child.type().name() == 'switch':
+                input_counts.append(len(child.inputs()))
+                # get first input name
+                org_name = child.inputs()[0].name()
+                # remove numbers and underscore from the name
+                name = re.sub(r'\d+', '', org_name)
+                name = name.replace("_", "")
+                switch_names.append(name)
+                attrib = "@" + name
+                #set parms as a expression
+                child.parm('input').setExpression(attrib)
+
+
+        # set wedge input count
+        wedge.parm('wedgeattributes').set(len(input_counts))
+        # add parameters to the wedge node
+        for i in range(len(input_counts)):
+            count =str(i+1)
+            wedge.parm('name' + count).set(switch_names[i])
+            print('type' + count)
+            wedge.parm('type' + count).set(2)
+            wedge.parm('random' + count).set(1)
+            wedge.parm('intrange' + count + 'x').set(0)
+            wedge.parm('intrange' + count + 'y').set(input_counts[i]-1)
+
+
+def get_input_count(node):
+    '''Get the input count of a node'''
+    selected_node = hou.selectedNodes()
+    if len(selected_node) == 1:
+        node = selected_node[0]
+        if node.type().name() == 'switch':
+            print(node.parm('numinput').eval())
+        else:
+            hou.ui.displayMessage("Please select a switch node")
+
+                
+
+                
 
 def create_mantra_material():
     pass
