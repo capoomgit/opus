@@ -66,6 +66,12 @@ def create_toolbox():
     cache_selected_geo_nodes = create_button("Cache Selected Geo Nodes", panel_utils.cache_selected_geo_nodes)
     utils_layout.addWidget(cache_selected_geo_nodes)
 
+    create_object_merge_enviorment = create_button("Create Object Merge Environment", panel_utils.create_object_merge_enviorment)
+    utils_layout.addWidget(create_object_merge_enviorment)
+
+    get_input_count = create_button("Get Input Count", panel_utils.get_input_count)
+    utils_layout.addWidget(get_input_count)
+
     utils_widget.setLayout(utils_layout)
     tab_widget.addTab(utils_widget, "Utils")
 
@@ -121,6 +127,18 @@ def create_toolbox():
     render_layout.addWidget(render_tab_widget)
     render_widget.setLayout(render_layout)
     tab_widget.addTab(render_widget, "Render")
+
+    # ------------------ TOPs ------------------
+
+    tops_widget = QtWidgets.QWidget()
+    tops_layout = QtWidgets.QVBoxLayout()
+    tops_layout.setAlignment(QtCore.Qt.AlignTop)
+
+    create_wedge_setup_from_switch = create_button("Create Wedge Setup From Switch", panel_utils.create_wedge_setup_from_switch)
+    tops_layout.addWidget(create_wedge_setup_from_switch)
+
+    tops_widget.setLayout(tops_layout)
+    tab_widget.addTab(tops_widget, "TOPs")
 
 
     # ------------------ Development ------------------
