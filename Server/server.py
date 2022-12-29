@@ -37,26 +37,26 @@ UPDATE_JOB_WORKERS = """UPDATE "Jobs" SET workers = %s WHERE id = %s"""
 # UPDATE_JOB = """UPDATE "Jobs" SET status=%s, count=%s, remaining=%s WHERE id = %s"""
 CREATE_JOB = """INSERT INTO "Jobs" (project_id, type, remaining, count, status, priority, version, assigner, data, job_uuid, start_time, workers) VALUES (%s, %s, %s, %s, %s, %s,%s, %s, %s, %s, %s, %s)"""
 
-    
+
 
 class CapoomServer():
     def __init__(self):
-        
+
         # Server socket
         self.sock = None
-        
+
         self.addr = socket.gethostname()
         self.port = 18812
         self.max_data = 16384000
         self.timeout = .05
-        
+
         # This stores all commands sent from the admin
         self.commands = []
         self.temp_commands = []
-        
+
         # This stores the actual sockets
         self.all_connections = []
-        
+
         self.all_socks_uuid = {}
 
         # Added later on
@@ -85,7 +85,7 @@ class CapoomServer():
         try:
             self.sock.bind((self.addr, self.port))
             self.sock.listen()
-            
+
             self.sock.setblocking(True) # Prevent timeout
         except socket.error as msg:
             logger.critical("Socket Binding error" + str(msg) + "\n" + "Retrying...")
@@ -103,7 +103,7 @@ class CapoomServer():
 
         # Connect to database
         try:
-            
+
 
             self.db_conn = psycopg2.connect(f"dbname={dbname} user={dbuser} password={dbpassword} host={dbhost} port={dbport}")
 
@@ -111,7 +111,7 @@ class CapoomServer():
             psycopg2.extras.register_uuid()
         except Exception as e:
             logger.critical(f"Database connection error: {e}")
-    
+
     def get_active_jobs(self):
         return
         self.db_cur.execute("""SELECT * FROM "Jobs" WHERE status = 'active' ORDER BY priority DESC""")
@@ -129,7 +129,7 @@ class CapoomServer():
         while True:
             try:
                 conn, address = self.sock.accept()
-                
+
                 # Save the connection
                 self.all_connections.append(conn)
                 random_uuid = str(uuid.uuid4())
@@ -137,7 +137,7 @@ class CapoomServer():
                 logger.info("Connection has been established :" + address[0])
 
                 self.add_new_sock_to_cmds(conn)
-                
+
                 # Adding ip to ini file
                 self.chk_add_ip_to_ini(address[0])
 
@@ -159,7 +159,7 @@ class CapoomServer():
         except Exception as e:
             logger.critical(f"Error adding IP to ini: {e}")
 
-        
+
 
 
     def get_sock_uuid(self, sock : socket.socket) -> uuid.UUID:
@@ -188,8 +188,8 @@ class CapoomServer():
         for assigned in self.assigned:
             if assigned.cmd_uuid == cmduuid and assigned.work_id == workid:
                 return assigned
-                
-    #Remove disconnected sockets 
+
+    #Remove disconnected sockets
     def remove_sock(self,s,message):
         """ Remove a socket from the list of connections\n
             `s` the socket\n
@@ -224,12 +224,12 @@ class CapoomServer():
     def save_assigned_commands(data):
         with open('assigned', 'wb') as handle:
             pickle.dump(data, handle)
-    
+
     def load_assigned_commands():
         with open('assigned', 'rb') as handle:
             loaded = pickle.load(handle)
             return loaded
-            
+
     #Get socket from ip
     def get_sock_from_ip(self, ip : str) -> socket.socket:
         """ Get the socket from an ip\n
@@ -260,11 +260,11 @@ class CapoomServer():
     def clear_cmds(self):
         """ Clear all commands from the queue\n"""
         for command in self.commands.copy():
-            
+
             self.rem_cmds(command, JobStatus.CANCELLED.value)
             logger.info(f"Command with {command.data['projectid']} project id removed from queue")
             self.send_cmds_to_db()
-            
+
         #clear assigneds
         self.assigned = []
 
@@ -299,7 +299,7 @@ class CapoomServer():
         # return
         if self.commands:
             # try:
-                
+
                 for command in self.commands.copy():
                     assigner = command.assigner
                     status = command.status
@@ -310,7 +310,7 @@ class CapoomServer():
                     if job_to_update:
                         # logger.info("UPDATE PARAMS", "status", command.status, "count", command.count, "remaining", len(command.remaining), "id", job_to_update["id"])
                         # logger.debug("Assigner is: " + str(assigner) + "Status is: " + str(status))
-                        
+
                         if job_to_update["count"] != command.count:
                             self.db_cur.execute(UPDATE_JOB_COUNT, (command.count, job_to_update["id"]))
                             self.db_conn.commit()
@@ -320,7 +320,7 @@ class CapoomServer():
                             self.db_cur.execute(UPDATE_JOB_STATUS, (command.status, job_to_update["id"]))
                             self.db_conn.commit()
                             logger.info("Updated job status > " + str(command.status))
-                            
+
                         if job_to_update["remaining"] != len(command.remaining):
                             self.db_cur.execute(UPDATE_JOB_REMAINING, (len(command.remaining), job_to_update["id"]))
                             self.db_conn.commit()
@@ -350,11 +350,11 @@ class CapoomServer():
                         self.db_cur.execute(CREATE_JOB, (int(command.data["projectid"]),
                                                         command.type,
                                                         len(command.remaining),
-                                                        command.count, 
+                                                        command.count,
                                                         status,
                                                         command.priority,
-                                                        command.version, 
-                                                        assigner, 
+                                                        command.version,
+                                                        assigner,
                                                         json.dumps(clean_data),
                                                         command.uuid,
                                                         start_time,
@@ -362,8 +362,8 @@ class CapoomServer():
                                                         )
                                             )
                         self.db_conn.commit()
-            
-       
+
+
 
     def read_cmds(self, unpickled : CapoomCommand):
         """ This function handles the commands sent by admins, it will add them to the queue\n
@@ -374,24 +374,24 @@ class CapoomServer():
         structure = unpickled.data["structure"]
         projectid = unpickled.data["projectid"]
         version = str(unpickled.version).zfill(4)
-        
-       
+
+
 
         # Skip exists
         if skip == True:
             logger.info("Skip enabled")
-           
+
             done = []
             #Get lines from finished.txt
             if os.path.isfile(SAVE_PATH.format(structure=structure, project_id=projectid, version=version) + "finished.txt"):
-                
+
                 with open(SAVE_PATH.format(structure=structure, project_id=projectid, version=version) + "finished.txt", "r") as f:
                     lines = f.readlines()
                     # remove whitespace characters like `\n` at the end of each line
                     lines = [x.strip() for x in lines]
-                    
+
                     for workid in unpickled.remaining:
-                        
+
                         # done = self.check_done(projectid, workid)
                         workidstr = str(workid)
                         if workidstr in lines:
@@ -403,27 +403,27 @@ class CapoomServer():
 
         unpickled.data["ips"] = unpickled.sockets
         unpickled.sockets = [self.get_sock_from_ip(x) for x in unpickled.data["ips"]]
-        
+
         # Default all the workid keys to workid and values to 0
         unpickled.data["workids_tries"] = {x:0 for x in unpickled.remaining}
 
         unpickled.data["error_count"] = 0
-        
+
         self.commands.append(unpickled)
 
         logger.info(f"Command added: {unpickled.type} {unpickled.data['projectid']} {unpickled.version} {unpickled.count}")
         # google_chat.send_message(f"Command added: {unpickled.type} {unpickled.data['projectid']} {unpickled.version} {unpickled.count}")
-        
+
         self.sort_commands()
         self.send_cmds_to_db()
-    
-    
+
+
     def sort_commands(self):
         self.commands.sort(key=lambda x: x.priority, reverse=True)
         self.send_cmds_to_db()
         logger.debug("Commands sorted")
-        
-        
+
+
 
     def add_new_sock_to_cmds(self, conn):
         for cmd in self.commands:
@@ -442,14 +442,14 @@ class CapoomServer():
         sock_uuid = self.get_sock_uuid(sock)
         ip = sock.getpeername()[0]
 
-        
+
 
         # This handles the status of the machine, if it is available or not
         if unpickled.type == "status":
             status = unpickled.data["status"]
             self.all_stats[sock_uuid] = status
             self.send_cl_to_admins()
-        
+
         # This handles the rank of the machine, if it is admin or a slave
         elif unpickled.type == "rank":
             rank = unpickled.data["rank"]
@@ -461,7 +461,7 @@ class CapoomServer():
             if uuids:
                 for id in uuids:
                     self.rem_cmds(self.get_cmd_by_uuid(id), JobStatus.CANCELLED.value)
-        
+
         # Pause the commands by uuid
         elif unpickled.type == "pausejob":
             uuids = unpickled.data["uuids"]
@@ -497,30 +497,30 @@ class CapoomServer():
             workid  = unpickled.data["workid"]
             result = unpickled.data["result"]
             cmd_uuid = unpickled.data["uuid"]
-    
+
             # TODO use the CapoomWork class for Works and get rid of (cmd_uuid, workid) tuples
             if self.assigned_work_from_cmd(cmd_uuid, workid) is not None:
 
-                
+
                 # Remove from assigned
                 # self.assigned = {k: v for k, v in self.assigned.items() if v != (cmd_uuid, workid)}
                 self.rm_assigned_work(cmd_uuid, workid)
-                
+
                 if self.get_cmd_by_uuid(cmd_uuid) is None:
                     logger.warning(f"Command with uuid {cmd_uuid} not found")
                     return
-                    
+
                 if result == True:
                     self.get_cmd_by_uuid(cmd_uuid).remaining.remove(workid)
                     # self.commands[0].remaining.remove(workid)
                     logger.debug(f"Work {cmd_uuid,workid} done, removed from remaining")
-    
+
                 # Error returned
                 elif result == False:
                     pass
                 self.send_cl_to_admins()
                 self.send_cmds_to_db()
-                
+
             else:
                 # This should never happen
                 logger.error("Work id not found in assigned workids list")
@@ -531,14 +531,14 @@ class CapoomServer():
             priority = unpickled.data["priority"]
             self.get_cmd_by_uuid(uuid).priority = priority
             self.sort_commands()
-    
+
 
         elif unpickled.type == "getclients":
             self.send_cl_to_admins()
 
         elif unpickled.type == "getcommands":
             self.send_cmds_to_db()
-        
+
         elif unpickled.type == "updatesocks":
             ucmd_uuids = unpickled.data["uuids"]
             if ucmd_uuids:
@@ -547,23 +547,23 @@ class CapoomServer():
 
         elif unpickled.type == "updateClients":
             logger.warning(f"Update command from admin => {ip}")
-    
+
         elif unpickled.type == "backup_db":
             logger.warning(f"DB backup command from admin => {ip}")
             self.backup_db()
 
         logger.log(unpickled.logginglvl, unpickled.message)
-     
+
 
     def get_cmd_by_uuid(self, uuid):
         for cmd in self.commands:
             if cmd.uuid == uuid:
                 return cmd
         return None
-       
-    
+
+
     def handle_jobs(self, socket, cmd):
-          
+
         if cmd.data["error_count"] > 9:
             logger.critical("Command failed 10 times, removing it")
             # self.rem_cmds(cmd, JobStatus.FAILED.value)
@@ -576,40 +576,40 @@ class CapoomServer():
             # Client disconnected during work
             if socket not in self.all_connections:
                 self.remove_sock(socket, "Client disconnected during work")
-                
+
                 return
-    
+
         elif sock_uuid not in self.all_ranks.keys():
             logger.error(f"Client with uuid {sock_uuid} not found")
             self.remove_sock(socket, "Client not found")
-            
+
             return
 
         elif self.all_ranks[sock_uuid] == ClientRanks.ADMIN.value:
             return
-        
+
         # elif self.all_stats[sock_uuid] == "offline":
         #     return
         else:
-            
+
             workid_to_assign = None
-            
+
             if len(cmd.remaining) > 0:
-                
+
 
                 # Find the workid to assign
-                # We have target command when we are in a render command. 
+                # We have target command when we are in a render command.
                 # Target command is the command that we are rendering caches for
-                
+
                 target_cmd = None
 
                 if cmd.type == "render":
-                    
+
                     target_cmd = self.get_cmd_by_uuid(cmd.data["target_uuid"])
 
                     if target_cmd is not None:
                         if target_cmd in self.commands:
-        
+
                             for workid in cmd.remaining:
                                 if self.assigned_work_from_cmd(cmd.uuid, workid) not in self.assigned and workid not in target_cmd.remaining:
                                     workid_to_assign = workid
@@ -620,20 +620,20 @@ class CapoomServer():
                             self.rem_cmds(cmd, JobStatus.FAILED.value)
 
                             return
-                    
-                        
-                
+
+
+
                 else:
                     for workid in cmd.remaining:
                         if self.assigned_work_from_cmd(cmd.uuid, workid) not in self.assigned:
                             workid_to_assign = workid
                             break
-                    
-                    
 
-                        
+
+
+
                 ## Workid found, assign it
-                
+
                 # Assign the work
                 if workid_to_assign != None:
 
@@ -645,7 +645,7 @@ class CapoomServer():
 
                     else:
                         self.assigned.append(CapoomWork(sock_uuid, cmd.uuid, workid_to_assign))
-                        
+
 
                         datas = cmd.data.copy()
                         datas["workid"] = workid_to_assign
@@ -681,19 +681,19 @@ class CapoomServer():
             else:
                 # No work left, remove the command
                 # self.rem_cmds(cmd, JobStatus.COMPLETED.value)
-                
+
                 cmd.status = JobStatus.COMPLETED.value
                 self.send_cmds_to_db()
                 return
 
-   
+
 
     def update_cmd_socks(self,ips,job_uuid):
 
         cmd = self.get_cmd_by_uuid(job_uuid)
         cmd.sockets = []
         cmd.data["ips"] = []
-        
+
         for ip in ips:
             sock = self.get_sock_from_ip(ip)
             if sock not in cmd.sockets:
@@ -702,13 +702,13 @@ class CapoomServer():
                 logger.info(f"Added {ip} to {job_uuid}")
                 self.send_cmds_to_db()
 
-    def backup_db(self):     
+    def backup_db(self):
         while True:
             try:
                 logger.info("Backing up database")
 
                 backup_date = datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
-               
+
                 subprocess.Popen(f"pg_dump -U postgres -d opusdb -f P:/pipeline/standalone/db_backup/backup_{backup_date}.sql")
             except Exception as e:
                 logger.error(f"Error while backing up db: {e}")
@@ -726,21 +726,21 @@ class CapoomServer():
 
                     if data:
                         actual_data = pickle.loads(data)
-                        
+
                         #Read commands
                         if isinstance(actual_data, CapoomCommand):
                             self.read_cmds(actual_data)
-                    
+
                         # Read responses
                         elif isinstance(actual_data, CapoomResponse):
                             self.read_responses(actual_data, conn)
-                        
+
                         # Invalid data
                         else:
                             logger.warning(f"invalid data {data} from {conn.getpeername()[0]}")
                             # self.remove_sock(conn,"Graceful")
                             # self.send_cl_to_admins()
-                            pass       
+                            pass
 
                 except socket.timeout:
                     pass
@@ -749,14 +749,14 @@ class CapoomServer():
                 except socket.error as e:
                     self.remove_sock(conn,"Forcibily")
                     self.send_cl_to_admins()
-                    
+
 
                 # Other exceptions
                 except Exception:
-                    
+
                     sys.excepthook(*sys.exc_info())
                     pass
-            
+
             #-- DONE READING DATA
 
 
@@ -767,14 +767,14 @@ class CapoomServer():
 
                 # Handle the commands
                 for conn in self.all_connections:
-                    
+
                     try:
                         if self.commands:
-                            
+
                             for cmd_index, cmd in enumerate(self.commands):
                                 if cmd.status == JobStatus.PAUSED.value or cmd.status == JobStatus.FAILED.value or cmd.status == JobStatus.COMPLETED.value or cmd.status == JobStatus.NOTSTARTED.value:
                                     continue
-                                if conn in self.commands[cmd_index].sockets:  
+                                if conn in self.commands[cmd_index].sockets:
                                     self.handle_jobs(conn, cmd)
 
 
@@ -803,14 +803,14 @@ class CapoomServer():
 if __name__ == "__main__":
 
     server = None
-    
+
     try:
         server = CapoomServer()
     except KeyError as e:
         logger.error(f"Invalid File: {e.args[0]} is not in the JSON file")
-    
+
     if server is not None:
-        
+
         conn_handler = threading.Thread(None, server.accepting_connections, "ConnectionHandler")
         conn_handler.start()
 
@@ -822,8 +822,8 @@ if __name__ == "__main__":
 
         work_timeout = threading.Thread(None, server.chk_work_timeout, "WorkTimeout")
         work_timeout.start()
-        
-        
+
+
 
     else:
         logger.error("Server could not be started!")

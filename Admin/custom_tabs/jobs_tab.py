@@ -215,7 +215,7 @@ class JobView(QVBoxLayout):
     def clear_job_history(self):
         if self.main.admin is not None:
             CLEAR_JOBS = """DELETE FROM "Jobs" WHERE status=%s or status=%s or status=%s"""
-            self.db_cur.execute(CLEAR_JOBS, (JobStatus.COMPLETED.value, JobStatus.CANCELLED.value, JobStatus.FAILED.value))
+            self.db_cur.execute(CLEAR_JOBS, (JobStatus.COMPLETED.value, JobStatus.CANCELLED.value, JobStatus.FAILED.value,))
             self.db_conn.commit()
             self.refresh()
         else:
