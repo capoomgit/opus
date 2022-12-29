@@ -35,8 +35,14 @@ def render_with_omni(frame_count, out_config, usd_path, out_path):
     import omni.kit.commands
     import os
     from pxr import Sdf
-    def assign_materials():
+    def assign_materials(materials_path, stage):
+        """Assigns materials to all meshes in the scene based on the naming convention"""
+
+        #----------------------------------------------------------#
+        materials_path = "P:\pipeline\standalone_dev\mats"
         stage = omni.usd.get_context().get_stage()
+        #----------------------------------------------------------#
+
         for prim in stage.Traverse():
             if prim.GetTypeName() == "Mesh":
 
@@ -45,17 +51,17 @@ def render_with_omni(frame_count, out_config, usd_path, out_path):
                     print(f"prim_name: {prim_name} is not a valid material name")
                     continue
 
-                material_name =prim_name.split('_')[0]
+                material_name = prim_name.split('_')[0]
                 material_type = prim_name.split('_')[1]
-                # print(f"material_name: {material_name} material_type: {material_type}")
 
                 #Create material reference
+                #TODO - Check if sbsar file exists
                 if not stage.GetPrimAtPath(f"/materials/{material_name}_{material_type}"):
-                    # print(f"Creating material reference: {material_name}_{material_type}")
                     omni.kit.commands.execute('CreateReference',
                         path_to=Sdf.Path(f"/materials/{material_name}_{material_type}"),
-                        asset_path=f"{self.materials_path}/{material_name}.sbsar",
+                        asset_path=f"{materials_path}/{material_name}.sbsar",
                         usd_context=omni.usd.get_context())
+                    # TODO - Set material parameters here
 
                 #Assign material
                 selected_material=stage.GetPrimAtPath(f"/materials/{material_name}_{material_type}")
