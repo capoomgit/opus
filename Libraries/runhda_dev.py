@@ -571,6 +571,10 @@ def assign_materials(object_name, geo, node, seed):
     #------------------------------------#
     geom = node.geometry()
 
+    if geom is None:
+        runhda_logger.warn(f"Object {object_name} has no geometry")
+        return node
+
     materials = {}
     attribcreate = None
 
