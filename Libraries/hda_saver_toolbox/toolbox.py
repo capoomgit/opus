@@ -69,8 +69,8 @@ def create_toolbox():
     create_object_merge_enviorment = create_button("Create Object Merge Environment", panel_utils.create_object_merge_enviorment)
     utils_layout.addWidget(create_object_merge_enviorment)
 
-    get_input_count = create_button("Get Input Count", panel_utils.get_input_count)
-    utils_layout.addWidget(get_input_count)
+    create_output_node = create_button("Create Output Node", panel_utils.create_output_node)
+    utils_layout.addWidget(create_output_node)
 
     utils_widget.setLayout(utils_layout)
     tab_widget.addTab(utils_widget, "Utils")

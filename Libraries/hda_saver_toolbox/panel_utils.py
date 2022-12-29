@@ -179,37 +179,6 @@ def delete_hdas(nodes=None):
                     cursor.execute(UPDATE_PATH,(path_hda["hdas"],path_hda["id"]))
 
 
-# def create_export_env():
-#     """Create export enviorment for the selected node parms to a database"""
-#     #create a geo node
-#     geo = hou.node("/obj").createNode("geo")
-#     geo.setName("export_env")
-#     geo.setColor(hou.Color((0, 1, 0)))
-#     #create a merge node named DEPENDENCIES and move to good position
-#     merge = geo.createNode("merge")
-#     merge.setName("DEPENDENCIES", unique_name=True)
-#     merge.setColor(hou.Color((1, 0, 1)))
-#     merge.moveToGoodPosition(move_outputs=False,move_inputs=False, relative_to_inputs=True)
-    
-#     #create a null node named OUTPUT
-#     output = geo.createNode("null", "OUTPUT")
-#     output.setDisplayFlag(True)
-#     output.setRenderFlag(True)
-#     output.setInput(0, merge)
-#     output.setColor(hou.Color((1,0,0)))
-#     output.moveToGoodPosition(move_outputs=False,move_inputs=False, relative_to_inputs=True)
-    
-# def show_node_type():
-#     """Show the node type of the selected node"""
-#     selected_nodes = hou.selectedNodes()
-#     if len(selected_nodes) == 0:
-#         hou.ui.displayMessage("Please select a node")
-#     elif len(selected_nodes) > 1:
-#         hou.ui.displayMessage("Please select only one node")
-#     else:
-#         hou.ui.displayMessage("The selected node type is {}".format(selected_nodes[0].type().name()))
-
-
 def show_node_type():
     """Show the node type of the selected node """
     selected_nodes = hou.selectedNodes()
@@ -220,25 +189,6 @@ def show_node_type():
     else:
         hou.ui.displayMessage("The selected node type is {}".format(selected_nodes[0].type()))
         pprint(selected_nodes[0].type())
-
-
-# #show the node type of all the nodes in the scene
-# def show_node_belonging():
-#     """Show the selected node name components"""
-#     selected_nodes = hou.selectedNodes()
-#     if len(selected_nodes) == 0:
-#         hou.ui.displayMessage("Please select a node")
-#     elif len(selected_nodes) > 1:
-#         hou.ui.displayMessage("Please select only one node")
-#     else:
-#         company = hou.hda.componentsFromFullNodeTypeName(selected_nodes[0].type().name())
-#         company = company[1].split(":")
-#         hou.ui.displayMessage("The selected node belongs to {}".format(company[0]))
-
-# #Finding all nodes of a specific type
-# def find_node_type(node_type):
-#     """Find all nodes of a specific type"""
-#     all_nodes = hou.sopNodeTypeCategory().nodeTypes(node_type).instances()
 
 def show_node_name():
     """Print the selected node name"""
@@ -435,16 +385,48 @@ def display_output_node():
     if len(selected_nodes) != 0:
         # find the output node inside the selected sop node
         for node in selected_nodes:
-            if node.type() == hou.sopNodeTypeCategory().nodeTypes()['geo']:
+            if node.type().name() == 'geo':
                 for child in node.children():
-                    if child.type() == hou.sopNodeTypeCategory().nodeTypes()['output']:
+                    if child.type().name() == 'output':
                         # display the output node
-                        child.setCurrent(True, clear_all_selected=True)
                         child.setDisplayFlag(True)
                         child.setRenderFlag(True)         
             else:
                 hou.ui.displayMessage("Please select a geo node")
                 break
+
+def create_output_node():
+    '''Create an output node'''
+    selected_nodes = hou.selectedNodes()
+    if len(selected_nodes) != 0:
+        exist = []
+
+        # find the output node inside the selected sop node
+        for node in selected_nodes:
+            if node.type().name() == 'geo':
+                print(node.type().name())
+                # find output node and create a cache node and connect it to the output node
+                for child in node.children():
+                    if child.type().name() == 'output':
+                        exist.append(child.name())
+                        break
+                else:
+                    # find displayed node
+                    for child in node.children():
+                        if child.isDisplayFlagSet():
+                            selected = child
+
+                    # create an output node
+                    output_node = node.createNode("output")
+                    output_node.setInput(0, selected)
+                    output_node.moveToGoodPosition(move_outputs=False,move_inputs=False, relative_to_inputs=True)
+                    output_node.setDisplayFlag(True)
+            else:
+                hou.ui.displayMessage("Please select a geo node")
+                break
+
+        if len(exist) != 0:
+            hou.ui.displayMessage("Output node already exists: {}".format(exist))
 
 def cache_selected_geo_nodes():
     '''Cache the selected geo nodes'''
@@ -536,21 +518,7 @@ def create_wedge_setup_from_switch():
             wedge.parm('random' + count).set(1)
             wedge.parm('intrange' + count + 'x').set(0)
             wedge.parm('intrange' + count + 'y').set(input_counts[i]-1)
-
-
-def get_input_count(node):
-    '''Get the input count of a node'''
-    selected_node = hou.selectedNodes()
-    if len(selected_node) == 1:
-        node = selected_node[0]
-        if node.type().name() == 'switch':
-            print(node.parm('numinput').eval())
-        else:
-            hou.ui.displayMessage("Please select a switch node")
-
-                
-
-                
+            
 
 def create_mantra_material():
     pass
