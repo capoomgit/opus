@@ -46,24 +46,43 @@ class ComponentView(QVBoxLayout):
 
         if selected:
             self.update_rhs()
+
+    def clear_layout(self, layout):
+        """Recursively clear the layout of widgets and sublayouts"""
+        for i in reversed(range(layout.count())):
+            layout_item = layout.itemAt(i)
+            if layout_item.widget() is not None:
+                widget_to_remove = layout_item.widget()
+                widget_to_remove.setParent(None)
+                layout.removeWidget(widget_to_remove)
+
+            elif layout_item.spacerItem() is not None:
+                spacer_to_remove = layout_item.spacerItem()
+                layout.removeItem(spacer_to_remove)
+
+            else:
+                layout_to_remove = layout.itemAt(i)
+                self.clear_layout(layout_to_remove)
+
     # rhs = right hand side
     def update_rhs(self):
         # Get the selected item
         selected_item = self.tree_view.selectedIndexes()[0]
         selected_id = selected_item.siblingAtColumn(1).data()
         selected_type = selected_item.siblingAtColumn(2).data()
-
+        self.clear_layout(self.main.parmLayout)
+        # self.main.parm_settings.clear_model()
+        # self.main.object_settings.clear_model()
         if selected_type == "Objects":
-            self.main.parm_settings.clear_model()
+            self.update_object_settings(selected_item)
             # TODO: Add the object settings
         elif selected_type == "Components":
-            self.main.parm_settings.clear_model()
+            pass
             # TODO: Add the component and path settings
         elif selected_type == "Paths":
-            self.main.parm_settings.clear_model()
+            pass
             # TODO figure out if you want to do something if path is selected.
         elif selected_type == "Hdas":
-            self.main.parm_settings.clear_model()
             self.update_parm_settings(selected_item)
 
 
@@ -176,9 +195,15 @@ class ComponentView(QVBoxLayout):
         id = self.tree_model.itemFromIndex(id_index).text()
 
 
-        self.main.parm_settings.init_model(id, table_name)
+        self.main.parm_settings.init_model(id)
 
+    def update_object_settings(self, index : QModelIndex):
+        # item = self.tree_model.itemFromIndex(index)
+        # id_index = index.sibling(item.row(), 1)
+        # id = self.tree_model.itemFromIndex(id_index).text()
 
+        self.main.object_settings.init_model()
+        # self.main.object_settings.init_model(item)
     # Github copilot suggested this, we can maybe implement it later
     # def create_context_menu(self):
     #     self.context_menu = QMenu(self.tree_view)

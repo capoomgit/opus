@@ -31,96 +31,58 @@ class ParmView(QVBoxLayout):
 
         # Create a combobox
     def clear_model(self):
-        # TODO There has to be a better way to do this
-        try:
-            self.hda_parms_list_view.setParent(None)
-            self.hda_parms_list_view = None
-        except Exception:
-            pass
+        self.main.components.clear_layout(self.main.parmLayout)
 
-        try:
-            for i in reversed(range(self.hda_version_layout.count())):
-                self.hda_version_layout.itemAt(i).widget().setParent(None)
-        except Exception:
-            pass
-
-        try:
-            for i in reversed(range(self.parm_layout.count())):
-                self.parm_layout.itemAt(i).widget().setParent(None)
-        except Exception:
-            pass
-
-        try:
-            for i in reversed(range(self.parm_list_layout.count())):
-                self.parm_layout.itemAt(i).widget().setParent(None)
-        except Exception:
-            pass
-
-        try:
-            for i in reversed(range(self.count())):
-                self.itemAt(i).widget().setParent(None)
-        except Exception:
-            pass
-
-        try:
-            self.parm_random_rule_list.setParent(None)
-        except Exception:
-            pass
-
-
-
-
-    def init_model(self, hda_id, table_name):
+    def init_model(self, hda_id):
         self.clear_model()
 
-        if table_name == "Hdas":
-            # Create the version layout
-            self.hda_version_layout = QVBoxLayout()
+        # Create the version layout
+        self.hda_version_layout = QVBoxLayout()
 
-            self.hda_version_layout.addWidget(QLabel("Selected Version:"))
-            self.version_combobox = QComboBox()
-            self.hda_version_layout.addWidget(self.version_combobox)
+        self.hda_version_layout.addWidget(QLabel("Selected Version:"))
+        self.version_combobox = QComboBox()
+        self.hda_version_layout.addWidget(self.version_combobox)
 
-            self.update_used_version_button = QPushButton("Update Version")
-            self.hda_version_layout.addWidget(self.update_used_version_button)
+        self.update_used_version_button = QPushButton("Update Version")
+        self.hda_version_layout.addWidget(self.update_used_version_button)
 
-            self.addLayout(self.hda_version_layout)
+        self.addLayout(self.hda_version_layout)
 
-            # Container layout
-            self.parm_layout = QHBoxLayout()
+        # Container layout
+        self.parm_layout = QHBoxLayout()
 
-            # Layout for parameter list
-            self.parm_list_layout = QVBoxLayout()
-            self.parm_list_layout.setAlignment(Qt.AlignTop)
+        # Layout for parameter list
+        self.parm_list_layout = QVBoxLayout()
+        self.parm_list_layout.setAlignment(Qt.AlignTop)
 
-            self.parm_layout.addLayout(self.parm_list_layout)
-            # Fixed size for parm_layout
-            # self.parm_layout.setSizeConstraint(QVBoxLayout.SizeConstraint.SetFixedSize)
+        self.parm_layout.addLayout(self.parm_list_layout)
+        # Fixed size for parm_layout
+        # self.parm_layout.setSizeConstraint(QVBoxLayout.SizeConstraint.SetFixedSize)
 
-            # Layout for parameters
-            self.parm_values_layout = QVBoxLayout()
+        # Layout for parameters
+        self.parm_values_layout = QVBoxLayout()
 
-            self.scroll_widget = QWidget()
-            self.scroll_widget.setLayout(self.parm_values_layout)
-            self.scroll_widget.layout().setAlignment(Qt.AlignTop)
+        self.scroll_widget = QWidget()
+        self.scroll_widget.setLayout(self.parm_values_layout)
+        self.scroll_widget.layout().setAlignment(Qt.AlignTop)
 
-            self.scroll_area = QScrollArea()
-            self.scroll_area.setWidgetResizable(True)
-            self.scroll_area.setWidget(self.scroll_widget)
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setWidget(self.scroll_widget)
 
-            self.parm_values_layout.setAlignment(Qt.AlignTop)
+        self.parm_values_layout.setAlignment(Qt.AlignTop)
 
-            self.parm_layout.addWidget(self.scroll_area)
+        self.parm_layout.addWidget(self.scroll_area)
 
-            self.addLayout(self.parm_layout)
+        self.addLayout(self.parm_layout)
 
-            # This is a bit weird
+        # This is a bit weird
 
-            self.db_cur.execute("""SELECT * FROM "Hdas" WHERE hda_id = %s""", (hda_id,))
-            hdas = self.db_cur.fetchall()
-            hda_versions = [str(hda["hda_version"]) for hda in hdas]
-            self.version_combobox.addItems(hda_versions)
-            self.initialize_parameter_list(hda_id, hdas[0]["hda_version"])
+        self.db_cur.execute("""SELECT * FROM "Hdas" WHERE hda_id = %s""", (hda_id,))
+        hdas = self.db_cur.fetchall()
+        hda_versions = [str(hda["hda_version"]) for hda in hdas]
+        self.version_combobox.addItems(hda_versions)
+        self.initialize_parameter_list(hda_id, hdas[0]["hda_version"])
 
     def initialize_parameter_list(self, hda_id, hda_version):
         """ This creates a list that shows all the parameters on the selected version of the HDA"""

@@ -26,7 +26,7 @@ from get_credentials import get_credentials
 from custom_tabs.jobs_tab import JobView
 from custom_tabs.component_tree import ComponentView
 from custom_tabs.parm_settings_view import ParmView
-
+from custom_tabs.obj_settings_view import ObjView
 
 
 VERSION_PATH = "P:/pipeline/standalone/version.ini"
@@ -810,6 +810,7 @@ class Ui_MainWindow(object):
         self.init_jobs()
         self.init_components()
         self.init_parm_settings()
+        self.init_object_settings()
         self.init_button_actions()
         self.init_client_list_view()
         self.init_structure_list()
@@ -913,13 +914,17 @@ class Ui_MainWindow(object):
 
     def init_components(self):
         self.components = ComponentView(self.db_conn, self.db_cur, self)
-
+        self.parmLayout.setAlignment(Qt.AlignTop)
         self.componentsLayout.addLayout(self.components)
         self.componentsLayout.addLayout(self.horizontalLayout_12)
 
     def init_parm_settings(self):
         self.parm_settings = ParmView(self.db_conn, self.db_cur, self)
         self.parmLayout.addLayout(self.parm_settings)
+
+    def init_object_settings(self):
+        self.object_settings = ObjView(self.db_conn, self.db_cur, self)
+        self.parmLayout.addLayout(self.object_settings)
 
     def init_client_list_view(self):
         self.list_clients.setSelectionMode(QAbstractItemView.ExtendedSelection)
