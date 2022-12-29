@@ -334,6 +334,8 @@ class CapoomServer():
                             self.db_conn.commit()
                             logger.info("Updated job priority > " + str(command.priority))
                     else:
+                        if command.status == JobStatus.CANCELLED.value or command.status == JobStatus.COMPLETED.value or command.status == JobStatus.FAILED.value:
+                            continue
 
                         # Creating new job
                         start_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -680,8 +682,8 @@ class CapoomServer():
                     return
             else:
                 # No work left, remove the command
-                # self.rem_cmds(cmd, JobStatus.COMPLETED.value)
 
+                # self.rem_cmds(cmd, JobStatus.COMPLETED.value)
                 cmd.status = JobStatus.COMPLETED.value
                 self.send_cmds_to_db()
                 return
