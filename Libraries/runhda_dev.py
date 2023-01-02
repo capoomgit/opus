@@ -180,6 +180,20 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
                 else:
                     hda = place_hda(db_hda, hougeo, parm_template)
 
+                    if db_hda["hda_name"] == "TerrainCreator":
+                        try:
+                            area_blast=hougeo.createNode("blast")
+                            area_blast.parm("group").set(f"@areaId={work_id}")
+                            area_blast.parm("negate").set(1)
+                            area_blast.setInput(0, hda)
+                            hda=area_blast
+                        except Exception as e:
+                            # This is thrown when we request a terrain work that has more house than the area
+                            # We need to handle this better
+                            runhda_logger.error(f"Error while creating terrain {e}\n This probably means that the area has more houses than the area")
+                            return False
+
+
                 if layer_index == hda_index == 0:
                     first_hda = hda
 
@@ -195,6 +209,10 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
 
                         cur.execute(GET_OBJECTS_BY_IDS, (tuple(data_obj_ids),))
                         data_objs = cur.fetchall()
+
+                        for data_obj in data_objs:
+                            if data_obj["obj_id"] in skipped_object_ids:
+                                data_objs.remove(data_obj)
 
                         data_obj_cache_paths = []
                         for data_obj in data_objs:
@@ -284,9 +302,12 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
             out_fc.parm('filemethod').set(1)
             out_fc.parm('trange').set(0)
             out_fc.parm('file').set(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=obj["obj_name"], project_id=project_id, work_id=work_id, Out=out, id=id) + ".bgeo.sc"))
-            if mat_path_node:
+
+            if mat_path_node != last_layer_last_hda and out == 0:
+                runhda_logger.opus(f"Setting the input of the filecache to the material path node {mat_path_node}")
                 out_fc.setInput(0, mat_path_node, out)
             else:
+                runhda_logger.opus(f"Setting the input of the filecache to the last layer last hda {last_layer_last_hda}")
                 out_fc.setInput(0, last_layer_last_hda, out)
 
             out_fc.parm('execute').pressButton()
@@ -462,7 +483,9 @@ def create_placer(project_id, work_id, version, parent_structure, object_name, f
     dependent_objects = []
     for data_object in actual_object["needed_data_for_multiple_objs"]:
         cur.execute(GET_OBJECT_BY_ID, (data_object,))
-        dependent_objects.append(cur.fetchone())
+        dep_obj = cur.fetchone()
+        if dep_obj["obj_id"] not in skipped_object_ids:
+            dependent_objects.append(dep_obj)
 
     filemerge = mergegeo.createNode("filemerge")
     filemerge.moveToGoodPosition(move_inputs=False)
@@ -582,7 +605,7 @@ def assign_materials(object_name, geo, node, seed):
 
         # Check if prim has an attribute called material
         try:
-            attr_material = prim.attribValue("material")
+            attr_material = prim.attribValue("opus_material")
         except hou.OperationFailed:
             runhda_logger.warn(f"Object {object_name} has no material attribute")
             return node

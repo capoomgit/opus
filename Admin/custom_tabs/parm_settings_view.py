@@ -496,6 +496,7 @@ class ParmView(QVBoxLayout):
             # Get the highest version of the hda
             self.db_cur.execute("""SELECT * FROM "Parameters" WHERE hda_id = %s ORDER BY hda_version DESC""", (hda["hda_id"],))
             default_parms = self.db_cur.fetchone()
+            print(default_parms)
 
             if json_savename not in self.new_rules:
                 self.new_rules[json_savename] = {}
