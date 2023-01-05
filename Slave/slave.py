@@ -10,6 +10,7 @@ from server_utils import CapoomResponse
 from render import render_smth
 from get_credentials import get_credentials
 from consts import ClientRanks, ClientStatus
+import gc
 import hou
 from stage import stage_usd
 
@@ -190,6 +191,8 @@ class CapoomSlave(threading.Thread):
         work_id = actual_data.data["workid"]
         version = actual_data.data["version"]
         job_uuid = actual_data.data["uuid"]
+        exports = actual_data.data["exports"]
+        logger.opus(f"EXPORTS: {exports}")
 
         template_path = actual_data.data["template_path"]
         cache_result = None
@@ -203,14 +206,14 @@ class CapoomSlave(threading.Thread):
         if template_path not in self.read_templates:
             self.read_templates[template_path] = self.read_template(template_path)
 
-        try:
-            cache_result = create_structure(structure, project_id, work_id, version, parm_template=self.read_templates[template_path])
-        except Exception as e:
-            logger.error(f"Failed to create {structure} for project {project_id} and work {work_id} for version {version}, reason: {e}")
-            return CapoomResponse("donework",
-                                {"result":False, "workid":work_id, "uuid":job_uuid},
-                                f"Failed to read template {template_path}",
-                                logginglvl=logging.ERROR)
+        # try:
+        cache_result = create_structure(structure, project_id, work_id, version, parm_template=self.read_templates[template_path], export=exports)
+        # except Exception as e:
+        #     logger.error(f"Failed to create {structure} for project {project_id} and work {work_id} for version {version}, reason: {e}")
+        #     return CapoomResponse("donework",
+        #                         {"result":False, "workid":work_id, "uuid":job_uuid},
+        #                         f"Failed to read template {template_path}",
+        #                         logginglvl=logging.ERROR)
 
 
         cache_result = False

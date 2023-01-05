@@ -42,7 +42,7 @@ def init_logger(logger):
     runhda_logger = logger
     runhda_logger.info("Runhda logger initialized")
 
-def create_structure(structname, project_id, work_id, version, parm_template={}):
+def create_structure(structname, project_id, work_id, version, parm_template={}, export=[]):
     # Format XXXX
     version = str(version).zfill(4)
 
@@ -58,7 +58,6 @@ def create_structure(structname, project_id, work_id, version, parm_template={})
     # We store the objects we skipped so we skip the children of them as well
     global skipped_object_ids
     skipped_object_ids = []
-    runhda_logger.opus("Skipped object ids at the start: " + str(skipped_object_ids))
 
     for obj_id in object_ids:
         cur.execute(GET_OBJECT_BY_ID, (obj_id,))
@@ -78,15 +77,15 @@ def create_structure(structname, project_id, work_id, version, parm_template={})
             runhda_logger.info(f'Creating object {obj["obj_name"]} with {len(obj_styles)} styles')
             for style_counter, obj_style in enumerate(obj_styles):
                 runhda_logger.info(f'Creating object {obj["obj_name"]} with style {obj_style}')
-                result = create_object(obj_id, project_id, work_id, version, parent_structure=structname, style=obj_style, id=style_counter, parm_template=parm_template)
+                result = create_object(obj_id, project_id, work_id, version, parent_structure=structname, style=obj_style, id=style_counter, parm_template=parm_template, export=export)
                 obj_creation_results.append(result)
 
             create_placer(project_id, work_id, version, structname, obj["obj_name"], len(obj_styles))
         else:
-            result = create_object(obj_id, project_id, work_id, version, parent_structure=structname, parm_template=parm_template)
+            result = create_object(obj_id, project_id, work_id, version, parent_structure=structname, parm_template=parm_template, export=export)
             obj_creation_results.append(result)
 
-    merge_objects_of_structure(project_id, work_id, version, parent_structure=structname)
+    merge_objects_of_structure(project_id, work_id, version, parent_structure=structname, export=export)
 
     if all(obj_creation_results):
         runhda_logger.info("Structure created successfully")
@@ -99,8 +98,8 @@ def create_structure(structname, project_id, work_id, version, parm_template={})
 
 # TODO handle the save path errors that raises when we dont have a parent structure
 
-def create_object(obj_id, project_id, work_id, version, parent_structure="Standalone", style=None, id=0, prediction_parms={}, parm_template={}):
-    # try:
+def create_object(obj_id, project_id, work_id, version, parent_structure="Standalone", style=None, id=0, prediction_parms={}, parm_template={}, export=[]):
+    try:
         cur.execute(GET_OBJECT_BY_ID, (obj_id,))
         obj = cur.fetchone()
         runhda_logger.info(f'Creating object {obj["obj_name"]}')
@@ -115,14 +114,14 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
         if dependent_objs_ids:
             for dep_obj_id in dependent_objs_ids:
                 if dep_obj_id in skipped_object_ids:
-                    runhda_logger.opus(f'Skipping object {obj["obj_name"]} due to skipped dependency')
+                    runhda_logger.info(f'Skipping object {obj["obj_name"]} due to skipped dependency')
                     skipped_object_ids.append(obj_id)
                     return True
 
         if contradictive_obj_ids:
             for contradictive_obj_id in contradictive_obj_ids:
                 if contradictive_obj_id not in skipped_object_ids:
-                    runhda_logger.opus(f'Skipping object {obj["obj_name"]} due to contradictive dependency')
+                    runhda_logger.info(f'Skipping object {obj["obj_name"]} due to contradictive dependency')
                     skipped_object_ids.append(obj_id)
                     return True
 
@@ -243,7 +242,7 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
 
                                 if dep_id == -1:
                                     # TODO make the house part more generic
-                                    filepath = str(MERGE_PATH.format(project_id=project_id, version=version, structure="House") + f"/Merged_{project_id}_{work_id}_{version}.bgeo.sc")
+                                    filepath = str(MERGE_PATH.format(project_id=project_id, version=version, structure="House") + f"Bgeo/Bgeo_{project_id}_{work_id}_{version}.bgeo.sc")
                                 else:
                                     filepath = str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=dep_obj["obj_name"], project_id=project_id, work_id=work_id, Out=dependent_objs_outs[dep_i], id=0)+ ".bgeo.sc")
                                 first_hda_in_fc.parm('loadfromdisk').set(1)
@@ -297,17 +296,18 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
                     mat_path_node = None
                     runhda_logger.warn(e)
 
+
             out_fc = hougeo.createNode('filecache')
             out_fc.moveToGoodPosition(move_inputs=False)
             out_fc.parm('filemethod').set(1)
             out_fc.parm('trange').set(0)
             out_fc.parm('file').set(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=obj["obj_name"], project_id=project_id, work_id=work_id, Out=out, id=id) + ".bgeo.sc"))
 
-            if mat_path_node != last_layer_last_hda and out == 0:
-                runhda_logger.opus(f"Setting the input of the filecache to the material path node {mat_path_node}")
+            if (mat_path_node != last_layer_last_hda and out == 0) or mat_path_node is not None:
+                # runhda_logger.opus(f"Setting the input of the filecache to the material path node {mat_path_node}")
                 out_fc.setInput(0, mat_path_node, out)
             else:
-                runhda_logger.opus(f"Setting the input of the filecache to the last layer last hda {last_layer_last_hda}")
+                # runhda_logger.opus(f"Setting the input of the filecache to the last layer last hda {last_layer_last_hda}")
                 out_fc.setInput(0, last_layer_last_hda, out)
 
             out_fc.parm('execute').pressButton()
@@ -319,9 +319,9 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
             json.dump(obj_parms, f, indent=4)
         return True
 
-    # except Exception as e:
-    #     hou.hipFile.save(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + "Errors/" + CACHE_NAME.format(Object=obj["obj_name"], project_id=project_id, work_id=work_id, Out="0", id=id) + ".hiplc"))
-    #     return False
+    except Exception as e:
+        hou.hipFile.save(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + "Errors/" + CACHE_NAME.format(Object=obj["obj_name"], project_id=project_id, work_id=work_id, Out="0", id=id) + ".hiplc"))
+        return False
 
 
 def cast_parm(val, parmtype : str):
@@ -334,7 +334,6 @@ def cast_parm(val, parmtype : str):
     except Exception as e:
         runhda_logger.error(f"Could not cast {val} to {parmtype}")
         return e
-
 
 def place_hda(db_hda, hougeo, parm_template={}):
     """ Places the hda in the scene """
@@ -497,21 +496,17 @@ def create_placer(project_id, work_id, version, parent_structure, object_name, f
         filemerge.parm("filelist" + str(id+1)).set(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=object_name, project_id=project_id, work_id=work_id, Out=0, id=id) + ".bgeo.sc"))
 
     for input_i, dependent_object in enumerate(dependent_objects):
-    # We get all the ids of the multiple object that we are trying to place
-    # and merge them in file merge
 
-
-        # We also get the object that we need to place the object on
-        wallfc = mergegeo.createNode("filecache")
-        wallfc.parm("filemethod").set(1)
-        wallfc.parm("loadfromdisk").set(1)
-        wallfc.parm("file").set(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=dependent_object["obj_name"], project_id=project_id, work_id=work_id, Out=0, id=0) + ".bgeo.sc"))
+        placed_on = mergegeo.createNode("filecache")
+        placed_on.parm("filemethod").set(1)
+        placed_on.parm("loadfromdisk").set(1)
+        placed_on.parm("file").set(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=dependent_object["obj_name"], project_id=project_id, work_id=work_id, Out=0, id=0) + ".bgeo.sc"))
 
         # We create the placer
         placer = mergegeo.createNode("capoom::dev::Placer")
         placer.parm("object_name").set(object_name.lower())
         placer.setInput(0, filemerge)
-        placer.setInput(1, wallfc)
+        placer.setInput(1, placed_on)
         merge.setInput(input_i, placer)
 
     # We get the output of the placer
@@ -525,19 +520,17 @@ def create_placer(project_id, work_id, version, parent_structure, object_name, f
     hou.hipFile.save(str(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=object_name+"_placed", project_id=project_id, work_id=work_id, Out=0, id=0) + ".hiplc"))
     runhda_logger.info(f"Placement done: {object_name}")
 
-def merge_objects_of_structure(project_id, work_id, version, parent_structure="Standalone"):
+def merge_objects_of_structure(project_id, work_id, version, parent_structure="Standalone", export=[]):
     hou.hipFile.clear(suppress_save_prompt=1)
     houobj = hou.node("/obj")
     mergegeo = houobj.createNode("geo")
 
     # Loop over all object folders
     merge_paths = []
-    bool_merge_paths = []
 
     for folder in os.listdir(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure)):
         cur.execute(GET_OBJECT_BY_NAME, (folder,))
         obj_from_db = cur.fetchone()
-
 
         if obj_from_db is not None:
             if obj_from_db["obj_id"] in skipped_object_ids:
@@ -546,8 +539,6 @@ def merge_objects_of_structure(project_id, work_id, version, parent_structure="S
             if obj_from_db["keep"] == True or obj_from_db["keep"] is None:
                 if obj_from_db["needed_data_for_multiple_objs"] is not None:
                     merge_paths.append(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=obj_from_db["obj_name"] + "_placed", project_id=project_id, work_id=work_id, Out=0, id=0) + ".bgeo.sc")
-                # elif obj_from_db["bool_a"] is not None:
-                #     bool_merge_paths.append(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=obj_from_db["obj_name"], project_id=project_id, work_id=work_id, Out=0, id=0) + ".bgeo.sc")
                 else:
                     # We get the number of files that we need to merge
                     merge_paths.append(SAVE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + CACHE_NAME.format(Object=obj_from_db["obj_name"], project_id=project_id, work_id=work_id, Out=0, id=0) + ".bgeo.sc")
@@ -556,34 +547,31 @@ def merge_objects_of_structure(project_id, work_id, version, parent_structure="S
     mergefc.moveToGoodPosition(move_inputs=False)
     mergefc.parm("files").set(len(merge_paths))
 
-    mergefc_boola = mergegeo.createNode("filemerge")
-    mergefc_boola.parm("files").set(len(bool_merge_paths))
 
     for merge_i, merge_path in enumerate(merge_paths, start=1):
         mergefc.parm("filelist" + str(merge_i)).set(merge_path)
 
-    for merge_i, merge_path in enumerate(bool_merge_paths, start=1):
-        mergefc_boola.parm("filelist" + str(merge_i)).set(merge_path)
+    merge_out = mergegeo.createNode("null")
+    merge_out.moveToGoodPosition(move_inputs=False)
+    merge_out.setInput(0, mergefc)
 
-    # cBoolean = mergegeo.createNode("capoom::dev::cBoolean")
-    # cBoolean.setInput(0, mergefc_boola)
-    # cBoolean.setInput(1, mergefc)
+    # -- EXPORT
+    if "bgeo.sc" in export:
+        runhda_logger.opus("Exporting bgeo")
+        export_bgeo(mergegeo, merge_out, project_id, version, parent_structure, work_id)
 
-    mergeout = mergegeo.createNode("filecache")
-    mergeout.parm("filemethod").set(1)
-    mergeout.parm("trange").set(0)
-    mergeout.parm("file").set(str(MERGE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + f"/Merged_{project_id}_{work_id}_{version}.bgeo.sc"))
-
-    merge_all = mergegeo.createNode("merge")
-    merge_all.setInput(0, mergefc)
-
-    if len(bool_merge_paths) > 0:
-        merge_all.setInput(1, mergefc_boola)
-
-    mergeout.setInput(0, merge_all)
-
-    mergeout.parm("execute").pressButton()
-    hou.hipFile.save(str(MERGE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + f"/Merged_{project_id}_{work_id}_{version}.hiplc"))
+    if "pointcloud" in export:
+        runhda_logger.opus("Exporting pointcloud")
+        export_pc_as_xyz(mergegeo, merge_out, project_id, version, parent_structure, work_id)
+    
+    if "wireframe" in export:
+        runhda_logger.opus("Exporting wireframe")
+        export_wireframe(mergegeo, merge_out, project_id, version, parent_structure, work_id)
+    
+    if "hip" in export:
+        runhda_logger.opus("Exporting hip")
+        export_hip(project_id, version, parent_structure, work_id)
+        # hou.hipFile.save(str(MERGE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + f"/Merged_{project_id}_{work_id}_{version}.hiplc"))
 
 def assign_materials(object_name, geo, node, seed):
     """Assigns materials names to path of the objects based on the material attribute of the primitives \n
@@ -671,6 +659,90 @@ def get_random_rule_hda(all_rules, hda_name):
         parm_types.append(rule[4])
 
     return parm_names, parm_mins, parm_maxes, parm_defaults, parm_override_modes, parm_types
+
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
+# +++++++++++++++++++++++++++++++++++++++++++++++ EXPORT FUNCTIONS +++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
+
+def export_pc_as_xyz(hougeo, node, project_id, version, parent_structure, work_id):
+    # TODO make the export a dictionary rather than a list, so that we can add more settings to the specific export type, such as point count, export format etc
+    """ Exports the pointcloud of the given node using houdini's scatter node\n
+    `hougeo` is the geo obj of the houdini scene\n
+    `node` is the node to export the pointcloud of\n
+    `project_id` is the id of the project\n
+    `version` is the version of the project\n
+    `parent_structure` is the structure of the project\n
+    `work_id` is the id of the work
+    """
+    if node is None:
+        return
+
+    pc = hougeo.createNode("scatter")
+    pc.parm("relaxpoints").set(0)
+    pc.parm("npts").set(100000)
+    pc.setInput(0, node, 0)
+
+    pc_points = pc.geometry().points()
+    
+    ptpos = []
+    for pt in pc_points:
+        ptpos.append(pt.attribValue("P"))
+
+    # Check if the directory exists, if not create it
+    if not os.path.exists(MERGE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + f"Point_Cloud/"):
+        os.makedirs(MERGE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + f"Point_Cloud/")
+    
+    # check if the file exists, if not, create it
+    with open(str(MERGE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + f"Point_Cloud/PC_{project_id}_{work_id}_{version}.xyz"), "w") as f:
+        for pt in ptpos:
+            f.write(f"{pt[0]} {pt[1]} {pt[2]}\n")
+
+def export_bgeo(hougeo, node, project_id, version, parent_structure, work_id):
+    """ Exports the bgeo of the given node\n
+        `hougeo` is the geo obj of the houdini scene\n
+        `node` is the node to export the bgeo of\n
+        `project_id` is the id of the project\n
+        `version` is the version of the project\n
+        `parent_structure` is the structure of the project\n
+        `work_id` is the id of the work\n"""
+    
+    bgeoout = hougeo.createNode("filecache")
+    bgeoout.parm("filemethod").set(1)
+    bgeoout.parm("trange").set(0)
+    bgeoout.parm("file").set(str(MERGE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + f"Bgeo/Bgeo_{project_id}_{work_id}_{version}.bgeo.sc"))
+    bgeoout.setInput(0, node)
+
+    bgeoout.parm("execute").pressButton()
+
+def export_wireframe(hougeo, node, project_id, version, parent_structure, work_id):
+    """ Exports the wireframe of the given node\n
+        `hougeo` is the geo obj of the houdini scene\n
+        `node` is the node to export the wireframe of\n
+        `project_id` is the id of the project\n
+        `version` is the version of the project\n
+        `parent_structure` is the structure of the project\n
+        `work_id` is the id of the work
+        """
+
+    wf = hougeo.createNode("capoom::dev::house_wireframe")
+    wf.setInput(0, node)
+    
+    mergeoutobj = hougeo.createNode("filecache")
+    mergeoutobj.parm("filemethod").set(1)
+    mergeoutobj.parm("trange").set(0)
+    mergeoutobj.parm("file").set(str(MERGE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + f"Wireframe/Wireframe_{project_id}_{work_id}_{version}.obj"))
+
+    mergeoutobj.setInput(0, wf)
+    mergeoutobj.parm("execute").pressButton()
+
+def export_hip(project_id, version, parent_structure, work_id):
+    # Check if the directory exists, if not create it
+    if not os.path.exists(MERGE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + f"Hip/"):
+        os.makedirs(MERGE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + f"Hip/")
+
+    hou.hipFile.save(str(MERGE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + f"Hip/Hip_{project_id}_{work_id}_{version}.hiplc"))
 
 def init_creation():
     global conn, cur, multiples, multiple_data_hdas, all_styles
