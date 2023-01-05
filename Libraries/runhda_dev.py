@@ -175,23 +175,23 @@ def create_object(obj_id, project_id, work_id, version, parent_structure="Standa
                 # This is a special hardcoded case,
                 # we sometimes use nulls to get caches of outputs of some object as a seperate object by itself
                 # (i.e WallFromPorch)
-                if db_hda["hda_name"] == "Null":
-                    hda=hougeo.createNode("null")
-                else:
-                    hda = place_hda(db_hda, hougeo, parm_template)
+                # if db_hda["hda_name"] == "Null":
+                #     hda=hougeo.createNode("null")
+                # else:
+                hda = place_hda(db_hda, hougeo, parm_template)
 
-                    if db_hda["hda_name"] == "TerrainCreator":
-                        try:
-                            area_blast=hougeo.createNode("blast")
-                            area_blast.parm("group").set(f"@areaId={work_id}")
-                            area_blast.parm("negate").set(1)
-                            area_blast.setInput(0, hda)
-                            hda=area_blast
-                        except Exception as e:
-                            # This is thrown when we request a terrain work that has more house than the area
-                            # We need to handle this better
-                            runhda_logger.error(f"Error while creating terrain {e}\n This probably means that the area has more houses than the area")
-                            return False
+                if db_hda["hda_name"] == "TerrainCreator":
+                    try:
+                        area_blast=hougeo.createNode("blast")
+                        area_blast.parm("group").set(f"@areaId={work_id}")
+                        area_blast.parm("negate").set(1)
+                        area_blast.setInput(0, hda)
+                        hda=area_blast
+                    except Exception as e:
+                        # This is thrown when we request a terrain work that has more house than the area
+                        # We need to handle this better
+                        runhda_logger.error(f"Error while creating terrain {e}\n This probably means that the area has more houses than it can have")
+                        return False
 
 
                 if layer_index == hda_index == 0:
@@ -332,6 +332,10 @@ def cast_parm(val, parmtype : str):
             return float(val)
         elif parmtype.lower() == "int":
             return int(val)
+        elif parmtype.lower() == "string":
+            return val
+        else:
+            raise Exception(f"{parmtype} is not a supported type")
     except Exception as e:
         runhda_logger.error(f"Could not cast {val} to {parmtype}")
         return traceback.format_exc()
@@ -341,6 +345,8 @@ def place_hda(db_hda, hougeo, parm_template={}):
     hda_name = db_hda["hda_name"]
     hda_ver = None
     hda_id = db_hda["hda_id"]
+    hda_branch = db_hda["hda_branch"]
+
     if parm_template != {}:
         if f"Hdas_{hda_id}" in parm_template:
             hda_ver = parm_template[f"Hdas_{hda_id}.version"]
@@ -350,12 +356,9 @@ def place_hda(db_hda, hougeo, parm_template={}):
         selected_parm = get_hdaparms_highest_version(db_hda["hda_id"])
         hda_ver = selected_parm["hda_version"]
         runhda_logger.info(f"Selected version of {hda_name} is {hda_ver}")
-    # TODO seperation of branches
-    hda_path = None
-    if hda_ver:
-        hda_path = f"capoom::dev::{hda_name}::{hda_ver}"
-    else:
-        hda_path = f"capoom::dev::{hda_name}"
+    
+    hda_path = get_hda_path(hda_name, hda_ver, hda_branch)
+    
     try:
         hda = hougeo.createNode(hda_path)
     except Exception as e:
@@ -363,11 +366,25 @@ def place_hda(db_hda, hougeo, parm_template={}):
         return traceback.format_exc()
     return hda
 
+def get_hda_path(hda_name, hda_ver, hda_branch):
+    path = ""
+    if hda_branch:
+        path += f"{hda_branch}::"
+    if hda_name is not None:
+        path += f"{hda_name}"
+    else:
+        raise ValueError("Hda name is not defined")
+    
+    if hda_ver is not None:
+        path += f"::{hda_ver}"
+    
+    return path
+
 def set_hda_parms(hda, db_hda, seed, obj_name=None, style=None, prediction={}, parm_template={}):
     hda_name = db_hda["hda_name"]
 
     # TODO Check if we really need this. we shouldn't
-    if hda_name == "Null":
+    if hda_name == "null":
         return
     if hda_name != "StyleCatcher":
         parm_names, parm_mins, parm_maxes, parm_defaults, parm_override_modes, parm_types = [], [], [], [], [], []
@@ -407,8 +424,8 @@ def set_hda_parms(hda, db_hda, seed, obj_name=None, style=None, prediction={}, p
                         runhda_logger.warn("There are no min attributes in the geometry")
 
                     try:
-                        if hda.geometry().findGlobalAttrib(parm+"_max") is not None:
-                            parm_maxes[parmi] = hda.geometry().attribValue(parm+"_max")
+                        if hda.geometry().findGlobalAttrib("opus_"+parm+"_max") is not None:
+                            parm_maxes[parmi] = hda.geometry().attribValue("opus_"+parm+"_max")
                     except AttributeError as e:
                         runhda_logger.warn("There are no max attributes in the geometry")
 
@@ -430,7 +447,7 @@ def set_hda_parms(hda, db_hda, seed, obj_name=None, style=None, prediction={}, p
 
                 # Check if any of the values got overriden inside the hda
                 try:
-                    if hda.geometry().findGlobalAttrib(parm+"_actual") is not None:
+                    if hda.geometry().findGlobalAttrib("opus_"+parm+"_actual") is not None:
                         obj_parms[str(db_hda["hda_name"])][parm] = hda.geometry().attribValue(parm+"_actual")
                 except AttributeError as e:
                     pass
