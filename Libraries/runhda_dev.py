@@ -4,6 +4,7 @@ import random
 import sys,os
 import json
 import collections
+import traceback
 from get_credentials import get_credentials
 
 # import logging
@@ -333,7 +334,7 @@ def cast_parm(val, parmtype : str):
             return int(val)
     except Exception as e:
         runhda_logger.error(f"Could not cast {val} to {parmtype}")
-        return e
+        return traceback.format_exc()
 
 def place_hda(db_hda, hougeo, parm_template={}):
     """ Places the hda in the scene """
@@ -359,7 +360,7 @@ def place_hda(db_hda, hougeo, parm_template={}):
         hda = hougeo.createNode(hda_path)
     except Exception as e:
         runhda_logger.error(f"Could not place {hda_path}\nThis might be a template problem! Check the template for {hda_name}\nError:{e}")
-        return e
+        return traceback.format_exc()
     return hda
 
 def set_hda_parms(hda, db_hda, seed, obj_name=None, style=None, prediction={}, parm_template={}):

@@ -4,6 +4,7 @@ import os
 import socket, threading, json, pickle, sys, time
 import subprocess
 import configparser
+import traceback
 
 
 from server_utils import CapoomResponse
@@ -109,11 +110,12 @@ class CapoomSlave(threading.Thread):
                             cache_result, stage_result, render_result = None, None, None
 
 
-                            # try:
-                            cache_result = self.create(actual_data)
-                            # except Exception as e:
-                            # logger.error(f"Error while creating structure: {e}")
-                            # cache_result = False
+                            try:
+                                cache_result = self.create(actual_data)
+                            except Exception as e:
+                                logger.error(f"Error while creating structure:")
+                                logger.error(traceback.format_exc())
+                                cache_result = False
                             if do_stage:
                                 stage_result = self.stage(actual_data)
                             else:
@@ -176,7 +178,8 @@ class CapoomSlave(threading.Thread):
             except BlockingIOError as e:
                 pass
             except socket.error as e:
-                logger.critical(f"{socket.gethostname()} lost connection with the server, trying to reconnect, reason: {e}")
+                logger.critical(f"{socket.gethostname()} lost connection with the server, trying to reconnect, reason:")
+                logger.error(traceback.format_exc())
                 self.reconnect()
 
     # TODO actually make this work for objects aswell
@@ -206,14 +209,15 @@ class CapoomSlave(threading.Thread):
         if template_path not in self.read_templates:
             self.read_templates[template_path] = self.read_template(template_path)
 
-        # try:
-        cache_result = create_structure(structure, project_id, work_id, version, parm_template=self.read_templates[template_path], export=exports)
-        # except Exception as e:
-        #     logger.error(f"Failed to create {structure} for project {project_id} and work {work_id} for version {version}, reason: {e}")
-        #     return CapoomResponse("donework",
-        #                         {"result":False, "workid":work_id, "uuid":job_uuid},
-        #                         f"Failed to read template {template_path}",
-        #                         logginglvl=logging.ERROR)
+        try:
+            cache_result = create_structure(structure, project_id, work_id, version, parm_template=self.read_templates[template_path], export=exports)
+        except Exception as e:
+            logger.error(f"Failed to create {structure} for project {project_id} and work {work_id} for version {version}, reason:")
+            logger.error(traceback.format_exc())
+            return CapoomResponse("donework",
+                                {"result":False, "workid":work_id, "uuid":job_uuid},
+                                f"Failed to read template {template_path}",
+                                logginglvl=logging.ERROR)
 
 
         cache_result = False
@@ -351,4 +355,5 @@ class CapoomSlave(threading.Thread):
             return template
         except Exception as e:
             logger.error(f"Failed to read template, reason: {e}")
+            logger.error(traceback.format_exc())
             return {}
