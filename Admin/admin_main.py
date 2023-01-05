@@ -1,6 +1,6 @@
 from PySide6.QtCore import QTimer
 import threading
-import os, json, socket, configparser, time, uuid
+import os, json, socket, configparser, time, uuid, gc
 
 import psycopg2
 import psycopg2.extras
@@ -42,9 +42,9 @@ GET_JOB = """SELECT * FROM "Jobs" WHERE job_uuid = %s"""
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'adminclientfYScmn.ui'
+## Form generated from reading UI file 'adminclientskawVj.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.3.2
+## Created by: Qt User Interface Compiler version 6.4.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -71,6 +71,7 @@ class Ui_MainWindow(object):
         MainWindow.setWindowModality(Qt.NonModal)
         MainWindow.resize(1280, 720)
         MainWindow.setAutoFillBackground(True)
+        MainWindow.setStyleSheet(u"")
         MainWindow.setIconSize(QSize(25, 50))
         MainWindow.setAnimated(True)
         MainWindow.setTabShape(QTabWidget.Rounded)
@@ -382,7 +383,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayoutWidget_5 = QWidget(self.commands)
         self.verticalLayoutWidget_5.setObjectName(u"verticalLayoutWidget_5")
-        self.verticalLayoutWidget_5.setGeometry(QRect(700, 20, 321, 591))
+        self.verticalLayoutWidget_5.setGeometry(QRect(700, 20, 331, 591))
         self.verticalLayout_3 = QVBoxLayout(self.verticalLayoutWidget_5)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
@@ -458,12 +459,28 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_3.addLayout(self.horizontalLayout_2)
 
-        self.line_6 = QFrame(self.verticalLayoutWidget_5)
-        self.line_6.setObjectName(u"line_6")
-        self.line_6.setFrameShape(QFrame.HLine)
-        self.line_6.setFrameShadow(QFrame.Sunken)
+        self.label_5 = QLabel(self.verticalLayoutWidget_5)
+        self.label_5.setObjectName(u"label_5")
+        self.label_5.setAlignment(Qt.AlignCenter)
 
-        self.verticalLayout_3.addWidget(self.line_6)
+        self.verticalLayout_3.addWidget(self.label_5)
+
+        self.horizontalLayout_19 = QHBoxLayout()
+        self.horizontalLayout_19.setObjectName(u"horizontalLayout_19")
+        self.input_pointcloud = QCheckBox(self.verticalLayoutWidget_5)
+        self.input_pointcloud.setObjectName(u"input_pointcloud")
+        self.input_pointcloud.setChecked(False)
+
+        self.horizontalLayout_19.addWidget(self.input_pointcloud)
+
+        self.input_wireframe = QCheckBox(self.verticalLayoutWidget_5)
+        self.input_wireframe.setObjectName(u"input_wireframe")
+        self.input_wireframe.setChecked(False)
+
+        self.horizontalLayout_19.addWidget(self.input_wireframe)
+
+
+        self.verticalLayout_3.addLayout(self.horizontalLayout_19)
 
         self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
@@ -582,7 +599,7 @@ class Ui_MainWindow(object):
         self.line_2.setFrameShadow(QFrame.Sunken)
         self.horizontalLayoutWidget_6 = QWidget(self.hda_params)
         self.horizontalLayoutWidget_6.setObjectName(u"horizontalLayoutWidget_6")
-        self.horizontalLayoutWidget_6.setGeometry(QRect(10, 40, 311, 26))
+        self.horizontalLayoutWidget_6.setGeometry(QRect(10, 40, 311, 30))
         self.horizontalLayout_4 = QHBoxLayout(self.horizontalLayoutWidget_6)
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
         self.horizontalLayout_4.setContentsMargins(0, 0, 0, 0)
@@ -753,6 +770,9 @@ class Ui_MainWindow(object):
         self.input_cache_bgeo.setText(QCoreApplication.translate("MainWindow", u"bgeo.sc", None))
         self.input_cache_glb.setText(QCoreApplication.translate("MainWindow", u"glb", None))
         self.input_cache_gltf.setText(QCoreApplication.translate("MainWindow", u"gltf", None))
+        self.label_5.setText(QCoreApplication.translate("MainWindow", u"Synthetic Data", None))
+        self.input_pointcloud.setText(QCoreApplication.translate("MainWindow", u"Point Cloud", None))
+        self.input_wireframe.setText(QCoreApplication.translate("MainWindow", u"Wireframe", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.commands), QCoreApplication.translate("MainWindow", u"Commands", None))
         self.button_start.setText(QCoreApplication.translate("MainWindow", u"Start Job", None))
         self.button_cancel.setText(QCoreApplication.translate("MainWindow", u"Cancel Job", None))
@@ -940,6 +960,19 @@ class Ui_MainWindow(object):
         # TODO hide the columns after setting model
         self.jobsview.refresh()
 
+        self.admin_garbage_collector = threading.Thread(target=self.collect_garbage)
+        self.admin_garbage_collector.start()
+
+
+    def collect_garbage(self):
+        while True:
+            try:
+                collected_objects = gc.collect()
+                print(f"Garbage collector: collected {collected_objects} objects.")
+            except Exception as e:
+                print(e)
+            time.sleep(300)
+    
     def init_structure_list(self):
         self.input_structure.clear()
         self.input_structure_2.clear()
@@ -1125,7 +1158,6 @@ class Ui_MainWindow(object):
                     render_data["render"] = True
                     render_data["render_engine"] = self.input_engine.currentText().lower()
 
-
                     # get current index of self.i
                     if self.input_type.currentIndex() == 0:
                         render_data["frame_count"] = int(self.input_frame.text())
@@ -1135,43 +1167,39 @@ class Ui_MainWindow(object):
                 # CACHE SETTINGS
 
                 cache_data = {}
+                cache_data["exports"] = []
 
-                # TODO match case in 3.10
                 # BGEO
                 if self.input_cache_bgeo.isChecked():
-                    cache_data["cache_bgeo"] = True
-                else:
-                    cache_data["cache_bgeo"] = False
+                    cache_data["exports"].append("bgeo.sc")
 
+                # TODO HOUDINI DOESNT SUPPORT PATH/NAME ATTRIBUTES FOR HIERARCHY IN GLTF & GLB, WE NEED TO CHANGE THE WAY WE MERGE THE FILE FOR THIS
                 # GLB
                 if self.input_cache_glb.isChecked():
-                    cache_data["cache_glb"] = True
-                else:
-                    cache_data["cache_glb"] = False
+                    cache_data["exports"].append("glb")
 
                 # GLTF
                 if self.input_cache_gltf.isChecked():
-                    cache_data["cache_gltf"] = True
-                else:
-                    cache_data["cache_gltf"] = False
+                    cache_data["exports"].append("gltf")
 
                 # USD
                 if self.input_cache_usd.isChecked():
-                    cache_data["cache_usd"] = True
-                else:
-                    cache_data["cache_usd"] = False
+                    cache_data["exports"].append("usd")
 
+                # HIP
                 if self.input_cache_hip.isChecked():
-                    cache_data["cache_hip"] = True
-                else:
-                    cache_data["cache_hip"] = False
+                    cache_data["exports"].append("hip")
+
+                if self.input_pointcloud.isChecked():
+                    cache_data["exports"].append("pointcloud")
+                
+                if self.input_wireframe.isChecked():
+                    cache_data["exports"].append("wireframe")
+                    
+
 
                 if self.input_keepall.isChecked():
                     cache_data["keepall"] = True
-                else:
-                    cache_data["keepall"] = False
-
-
 
 
                 all_data = {}

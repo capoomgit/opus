@@ -1,5 +1,6 @@
 import sys, os
 import time
+import gc
 
 try:
     os.add_dll_directory("C:\\Program Files\\Side Effects Software\\Houdini 19.5.368\\bin")
@@ -116,11 +117,11 @@ class Ui_MainWindow(object):
 
         self.client.connect()
 
-        # TODO check if the communication thread is still running
-        # if not, restart slave
+        self.client_garbage_collector = threading.Thread(target=self.collect_garbage)
+        self.client_garbage_collector.start()
+
         self.client_comm_thread = threading.Thread(target=self.client.communicate_with_server)
         self.client_comm_thread.start()
-
 
 
         self.client_thread = threading.Thread(target=self.client.run)
@@ -139,7 +140,15 @@ class Ui_MainWindow(object):
             self.client.set_desired_status(ClientStatus.AVAILABLE.value)
         elif self.client_status == "Do not disturb":
             self.client.set_desired_status(ClientStatus.DND.value)
-
+    
+    def collect_garbage(self):
+        # This is...
+        while True:
+            try:
+                gc.collect()
+            except Exception as e:
+                print(e)
+            time.sleep(600)
 
     def exit(self):
         os._exit(1)

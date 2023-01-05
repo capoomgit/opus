@@ -7,6 +7,7 @@ import time
 import logging
 import configparser
 
+
 from server_utils import CapoomCommand
 from server_utils import CapoomResponse
 
@@ -18,10 +19,7 @@ VERSION_PATH = "P:/pipeline/standalone/version.ini"
 
 
 logger = setup_logger(f"{socket.gethostname()}_admin.log")
-# logger.basicConfig(filename=f"P:/pipeline/standalone_dev/logs/{socket.gethostname()}_admin_log.txt", format='%(levelname)s - %(asctime)s: %(message)s',datefmt='%H:%M:%S', level=logger.DEBUG)
-# logger.getLogger().addHandler(logger.StreamHandler())
 
-# TODO integrate QT
 class CapoomAdminClient(threading.Thread):
     def __init__(self, ip, port):
         threading.Thread.__init__(self)
@@ -30,7 +28,6 @@ class CapoomAdminClient(threading.Thread):
         self.commands = []
 
         self.all_clients = {}
-
         
         self.server_cmds = None
         
@@ -52,8 +49,6 @@ class CapoomAdminClient(threading.Thread):
     def run(self):
         """ Admin Client main thread """
 
-        #Connected
-        # self.server_socket.send(pickle.dumps(CapoomResponse("rank", {"rank":"admin"}, f"{socket.gethostname()} is an admin")))
         self.set_rank(ClientRanks.ADMIN.value)
         time.sleep(1)
         self.server_socket.send(pickle.dumps(CapoomResponse("getclients", {"getclients":"all"}, f"Get all clients")))
@@ -120,12 +115,10 @@ class CapoomAdminClient(threading.Thread):
         self.commands.append(CapoomResponse("backup_db",{}, f"{socket.gethostname()} is backing up the database", logginglvl=logging.INFO))
 
     def update_clients(self):
-        # self.commands.append(CapoomResponse("updateClients", {}, "Update clients"))
         config = configparser.ConfigParser()
         version_file = config.read(VERSION_PATH)
 
         if version_file:
-
             all_computers = dict(config.items("IndividualUpdates"))
             for computer in all_computers.keys():
                 logging.warning(f"{socket.gethostname()} is updating clients")
