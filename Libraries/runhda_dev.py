@@ -702,7 +702,10 @@ def export_pc_as_xyz(hougeo, node, project_id, version, parent_structure, work_i
     pc.parm("npts").set(100000)
     pc.setInput(0, node, 0)
 
-    pc_points = pc.geometry().points()
+    normalize_geo_size = hougeo.createNode("capoom::dev::normalize-geo-size")
+    normalize_geo_size.setInput(0, pc, 0)
+
+    pc_points = normalize_geo_size.geometry().points()
     
     ptpos = []
     for pt in pc_points:
