@@ -708,15 +708,16 @@ def export_pc_as_xyz(hougeo, node, project_id, version, parent_structure, work_i
     if node is None:
         return
 
+    normalize_geo_size = hougeo.createNode("capoom::dev::normalize_geo_size")
+    normalize_geo_size.setInput(0, node, 0)
+    
     pc = hougeo.createNode("scatter")
     pc.parm("relaxpoints").set(0)
     pc.parm("npts").set(100000)
-    pc.setInput(0, node, 0)
+    pc.setInput(0, normalize_geo_size, 0)
 
-    normalize_geo_size = hougeo.createNode("capoom::dev::normalize_geo_size")
-    normalize_geo_size.setInput(0, pc, 0)
 
-    pc_points = normalize_geo_size.geometry().points()
+    pc_points = pc.geometry().points()
     
     ptpos = []
     for pt in pc_points:
