@@ -8,6 +8,7 @@ import ast
 from collections import defaultdict
 from tabulate import tabulate
 from .ui_classes import TreeView, StandardItem
+import os
 
 class JobView(QVBoxLayout):
     def __init__(self, db_conn, db_cur, main, parent=None):
@@ -240,9 +241,10 @@ class JobView(QVBoxLayout):
     def right_click_menu(self, position):
         menu = QMenu()
         menu.addAction("Copy Job UUID", self.copy_selected_job_uuid)
-
+        
+        menu.addAction("Open Folder Location", self.open_folder_location)
         menu.exec_(self.tree_view.viewport().mapToGlobal(position))
-
+    
     def copy_selected_job_uuid(self):
         selected_indexes = self.tree_view.selectedIndexes()
         job_uuids = []
@@ -252,3 +254,23 @@ class JobView(QVBoxLayout):
                 job_uuids.append(job_uuid)
 
         QApplication.clipboard().setText(", ".join(set(job_uuids)))
+    
+    def open_folder_location(self):
+        selected_indexes = self.tree_view.selectedIndexes()
+        job_paths = []
+        if len(selected_indexes) > 0:
+            for index in selected_indexes:
+                project_id = self.tree_model.item(index.row(), 1).text()
+                version = self.tree_model.item(index.row(), 2).text()
+                version = version.zfill(4)
+                structure = "House"
+                # FIXME this does not work properly right now
+                # TODO We should get the structure directly from CapoomCommand class instead of data
+                job_path = f"P:/pipeline/standalone_dev/saved/{structure}/Project_{project_id}_v{version}/"
+                job_paths.append(job_path)
+        job_paths = list(set(job_paths))
+        print(job_paths)
+        for job_path in job_paths:
+            # Open the folder location
+            if os.path.exists(job_path):
+                os.startfile(job_path)
