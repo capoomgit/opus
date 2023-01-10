@@ -576,19 +576,30 @@ def merge_objects_of_structure(project_id, work_id, version, parent_structure="S
     # -- EXPORT
     if "bgeo.sc" in export:
         runhda_logger.opus("Exporting bgeo")
-        export_bgeo(mergegeo, merge_out, project_id, version, parent_structure, work_id)
-
+        try:
+            export_bgeo(mergegeo, merge_out, project_id, version, parent_structure, work_id)
+        except Exception as e:
+            runhda_logger.error(f"Error while exporting bgeo: {e}")
+    
     if "pointcloud" in export:
         runhda_logger.opus("Exporting pointcloud")
-        export_pc_as_xyz(mergegeo, merge_out, project_id, version, parent_structure, work_id)
-    
+        try:
+            export_pc_as_xyz(mergegeo, merge_out, project_id, version, parent_structure, work_id)
+        except Exception as e:
+            runhda_logger.error(f"Error while exporting pointcloud: {e}")
     if "wireframe" in export:
         runhda_logger.opus("Exporting wireframe")
-        export_wireframe(mergegeo, merge_out, project_id, version, parent_structure, work_id)
-    
+        try:
+            export_wireframe(mergegeo, merge_out, project_id, version, parent_structure, work_id)
+        except Exception as e:
+            runhda_logger.error(f"Error while exporting wireframe: {e}")
+
     if "hip" in export:
         runhda_logger.opus("Exporting hip")
-        export_hip(project_id, version, parent_structure, work_id)
+        try:
+            export_hip(project_id, version, parent_structure, work_id)
+        except Exception as e:
+            runhda_logger.error(f"Error while exporting hip: {e}")
         # hou.hipFile.save(str(MERGE_PATH.format(project_id=project_id, version=version, structure=parent_structure) + f"/Merged_{project_id}_{work_id}_{version}.hiplc"))
 
 def assign_materials(object_name, geo, node, seed):
@@ -702,7 +713,7 @@ def export_pc_as_xyz(hougeo, node, project_id, version, parent_structure, work_i
     pc.parm("npts").set(100000)
     pc.setInput(0, node, 0)
 
-    normalize_geo_size = hougeo.createNode("capoom::dev::normalize-geo-size")
+    normalize_geo_size = hougeo.createNode("capoom::dev::normalize_geo_size")
     normalize_geo_size.setInput(0, pc, 0)
 
     pc_points = normalize_geo_size.geometry().points()
